@@ -1,0 +1,8 @@
+- msg/tell
+- link clicking
+- auto name completion
+
+- timeout checks
+- highlights
+- sound alerts
+- auto update / update available confirmation?
