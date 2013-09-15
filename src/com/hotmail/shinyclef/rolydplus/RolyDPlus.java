@@ -12,7 +12,8 @@ import java.net.UnknownHostException;
 
 public class RolyDPlus
 {
-    private static final boolean development = true;
+    public static final boolean DEV_BUILD = true;
+    public static final boolean LOCAL_SERVER = true;
     private static boolean isConnected = false;
     private static boolean isLoggedIn = false;
 
@@ -21,9 +22,6 @@ public class RolyDPlus
 
     private static Socket socket;
     private static boolean readyToQuit = false;
-
-    private static String userName;
-    private static String password;
 
     public static void main(String[] args)
     {
@@ -48,7 +46,7 @@ public class RolyDPlus
 
     private static void setupConnection() throws UnknownHostException, IOException
     {
-        if (development)
+        if (LOCAL_SERVER)
         {
             SERVER_IP = "192.168.1.2";
             SERVER_PORT = 12003;
@@ -83,7 +81,7 @@ public class RolyDPlus
     {
         if (isConnected)
         {
-            NetProtocol.processOutput(NetProtocol.QUIT_MESSAGE);
+            NetProtocol.processOutput(NetProtocol.QUIT_MESSAGE_CLOSING);
             int retries = 0;
             while(!isReadyToQuit() && retries < 8)
             {

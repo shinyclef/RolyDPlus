@@ -61,7 +61,7 @@ public class FrameChat extends JFrame
     {
         //basic frame attributes
         setTitle("RolyDPlus Chat");
-        setSize(550, 600);
+        setSize(550, 320);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter()
         {

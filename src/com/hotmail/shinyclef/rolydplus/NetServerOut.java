@@ -54,4 +54,29 @@ public class NetServerOut implements Runnable
     {
         return toServerQueue;
     }
+
+    private class Pinger implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            try
+            {
+                while (true)
+                {
+                    //wait 28 seconds
+                    wait(60000);
+
+                    //send another ping
+                    NetProtocol.processOutput(NetProtocol.PING);
+                }
+
+            }
+            catch (InterruptedException e)
+            {
+                FramesManager.getFrameChat().writeColouredLine("An error has occurred pinging server: " +
+                        e.getMessage());
+            }
+        }
+    }
 }

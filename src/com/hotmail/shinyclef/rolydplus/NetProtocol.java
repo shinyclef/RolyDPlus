@@ -11,11 +11,16 @@ import java.util.concurrent.BlockingQueue;
 public class NetProtocol
 {
     private static final String COLOUR_CHAR = String.valueOf('\u00A7');
+    public static final String GOLD = COLOUR_CHAR + "6";
+    public static final String PINK = COLOUR_CHAR + "d";
+    public static final String YELLOW = COLOUR_CHAR + "e";
 
     protected static final String CHAT_MARKER = "*";
     protected static final String CUSTOM_COMMAND_MARKER = "@";
     protected static final String MC_COMMAND_MARKER = "/";
+    public static final String PING = CUSTOM_COMMAND_MARKER + "P";
     public static final String QUIT_MESSAGE = CUSTOM_COMMAND_MARKER + "Disconnect";
+    public static final String QUIT_MESSAGE_CLOSING = QUIT_MESSAGE + ":Closing";
     public static final String POISON_PILL_OUT = CUSTOM_COMMAND_MARKER + "PoisonPill";
 
     private static final int SECOND_UNTIL_FIRST_RETRY = 20;
@@ -37,17 +42,23 @@ public class NetProtocol
             return;
         }
 
-        if (input.startsWith("*")) //chat
+        switch (input.substring(0, 1))
         {
-            processChat(input);
-        }
-        else if (input.startsWith("@")) //custom command
-        {
-            processCustomCommand(input);
-        }
-        else if (input.startsWith("/")) //mc command
-        {
-            processMCCommand(input);
+            case CHAT_MARKER:
+                processChat(input);
+                break;
+
+            case CUSTOM_COMMAND_MARKER:
+                processCustomCommand(input);
+                break;
+
+            case MC_COMMAND_MARKER:
+                processMCCommand(input);
+                break;
+
+            default:
+                System.out.println("WARNING: processInput()'s default case was triggered with input: " + input);
+                break;
         }
     }
 
@@ -74,21 +85,25 @@ public class NetProtocol
         String command = input.substring(1);
         String[] args = command.split(":");
 
-        if (args[0].equals("Login"))
+        switch (args[0])
         {
-            NetProtocolHelper.processLoginReply(args);
+            case "Disconnect":
+                NetProtocolHelper.processDisconnect(args);
+                break;
+
+            case "Login":
+                NetProtocolHelper.processLoginReply(args);
+                break;
+
+            case "PlayerList":
+                NetProtocolHelper.processOnlineList(args[1]);
+                break;
+
+            case "ServerJoin": case "ServerQuit": case "ClientJoin": case "ClientQuit":
+                NetProtocolHelper.processOnlineChange(args[0], args[1], args[2]);
+                break;
         }
 
-        else if (args[0].equals("PlayerList"))
-        {
-            NetProtocolHelper.processOnlineList(args[1]);
-        }
-
-        else if (args[0].equals("ServerJoin") || args[0].equals("ServerQuit") ||
-                args[0].equals("ClientJoin") || args[0].equals("ClientQuit"))
-        {
-            NetProtocolHelper.processOnlineChange(args[0], args[1], args[2]);
-        }
     }
 
     private static void processMCCommand(String input)
@@ -128,14 +143,11 @@ public class NetProtocol
         processOutput(POISON_PILL_OUT);
 
         //inform user that server has shut down
-        String pink = COLOUR_CHAR + "d";
-        String message = pink + "Server has shut down. Restart RolyDPlus when server has restarted.";
+        String message = PINK + "Connection lost.";
         FramesManager.getFrameChat().writeColouredLine(message);
 
         //set to disconnected mode
         RolyDPlus.setConnected(false);
         FramesManager.disableServerInteraction();
-
-        //initialize auto reconnect
     }
 }

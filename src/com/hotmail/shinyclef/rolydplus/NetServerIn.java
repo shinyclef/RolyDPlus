@@ -36,13 +36,14 @@ public class NetServerIn implements Runnable
 
                 if (fromServer.startsWith(NetProtocol.QUIT_MESSAGE))
                 {
+                    //the quit message has already been sent to NetProtocol
                     break;
                 }
             }
         }
         catch (IOException e)
         {
-            //add error handling
+            FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "IO Exception: " + e.getMessage());
         }
 
         NetProtocol.processServerShutdown();
