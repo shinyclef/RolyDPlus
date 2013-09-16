@@ -1,8 +1,6 @@
 package com.hotmail.shinyclef.rolydplus;
 
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -47,36 +45,16 @@ public class NetServerOut implements Runnable
             e.printStackTrace();
         }
 
-        RolyDPlus.setReadyToQuit(true);
+        RolyDPlus.setHasDisconnected(true);
+
+        if (RolyDPlus.DEV_BUILD)
+        {
+            System.out.println("NetServerOut closing.");
+        }
     }
 
     public static BlockingQueue<String> getToServerQueue()
     {
         return toServerQueue;
-    }
-
-    private class Pinger implements Runnable
-    {
-        @Override
-        public void run()
-        {
-            try
-            {
-                while (true)
-                {
-                    //wait 28 seconds
-                    wait(60000);
-
-                    //send another ping
-                    NetProtocol.processOutput(NetProtocol.PING);
-                }
-
-            }
-            catch (InterruptedException e)
-            {
-                FramesManager.getFrameChat().writeColouredLine("An error has occurred pinging server: " +
-                        e.getMessage());
-            }
-        }
     }
 }

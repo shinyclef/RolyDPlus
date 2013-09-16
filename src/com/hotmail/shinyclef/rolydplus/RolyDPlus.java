@@ -15,13 +15,19 @@ public class RolyDPlus
     public static final boolean DEV_BUILD = true;
     public static final boolean LOCAL_SERVER = true;
     private static boolean isConnected = false;
-    private static boolean isLoggedIn = false;
+    private static boolean hasLoggedIn = false;
 
     private static String SERVER_IP = "0.0.0.0";
     private static int SERVER_PORT = 0;
+    private static Thread pinger;
+    private static final int TIMEOUT_SECONDS = 10;
+    public static final int PING_INTERVAL_SECONDS = 25;
+
+    private static String username;
+    private static String password;
 
     private static Socket socket;
-    private static boolean readyToQuit = false;
+    private static boolean hasDisconnected = false;
 
     public static void main(String[] args)
     {
@@ -44,12 +50,12 @@ public class RolyDPlus
         FramesManager.showFirstFrame();
     }
 
-    private static void setupConnection() throws UnknownHostException, IOException
+    private static void setupConnection() throws IOException
     {
         if (LOCAL_SERVER)
         {
             SERVER_IP = "192.168.1.2";
-            SERVER_PORT = 12003;
+            SERVER_PORT = 12004;
         }
         else //roly's server
         {
@@ -59,6 +65,7 @@ public class RolyDPlus
 
         //socket & reader/writer
         socket = new Socket(SERVER_IP, SERVER_PORT);
+        socket.setSoTimeout(TIMEOUT_SECONDS * 1000);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 
@@ -69,6 +76,9 @@ public class RolyDPlus
         //start threads
         new Thread(netServerIn).start();
         new Thread(netServerOut).start();
+
+        pinger = new Thread(new Pinger());
+        pinger.start();
 
         //set serverQueue in NetProtocol
         NetProtocol.setToServerQueue();
@@ -83,7 +93,7 @@ public class RolyDPlus
         {
             NetProtocol.processOutput(NetProtocol.QUIT_MESSAGE_CLOSING);
             int retries = 0;
-            while(!isReadyToQuit() && retries < 8)
+            while(!hasDisconnected() && retries < 8)
             {
                 try
                 {
@@ -100,7 +110,7 @@ public class RolyDPlus
         System.exit(code);
     }
 
-    private static void closeSocket()
+    public static void closeSocket()
     {
         try
         {
@@ -112,29 +122,78 @@ public class RolyDPlus
         }
     }
 
-    public static void login()
+    public static void login(boolean reconnecting)
     {
         NetProtocolHelper.requestOnlineList();
-        FramesManager.getFrameChat().setVisible(true);
-        FramesManager.getFrameLogin().setVisible(false);
-        isLoggedIn = true;
+        if (reconnecting)
+        {
+            FramesManager.enableServerInteraction();
+        }
+        else
+        {
+            FramesManager.getFrameChat().setVisible(true);
+            FramesManager.getFrameLogin().setVisible(false);
+            hasLoggedIn = true;
+        }
+
+    }
+
+    public static void reconnect()
+    {
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e)
+        {
+
+        }
+
+        //setup a new connection
+        try
+        {
+            setupConnection();
+        }
+        catch (IOException e)
+        {
+            System.err.println("Couldn't get I/O for the connection to: " + SERVER_IP + ":" + SERVER_PORT);
+            initializeExit(0);
+        }
+
+        //log back in
+        NetProtocolHelper.attemptLogin(username, password);
     }
 
     /* Getters */
+
+    public static Thread getPinger()
+    {
+        return pinger;
+    }
 
     public static boolean isConnected()
     {
         return isConnected;
     }
 
-    public static boolean isLoggedIn()
+    public static boolean hasLoggedIn()
     {
-        return isLoggedIn;
+        return hasLoggedIn;
     }
 
-    public static synchronized boolean isReadyToQuit()
+    public static synchronized boolean hasDisconnected()
     {
-        return readyToQuit;
+        return hasDisconnected;
+    }
+
+    public static String getUsername()
+    {
+        return username;
+    }
+
+    public static String getPassword()
+    {
+        return password;
     }
 
     /* Setters */
@@ -144,8 +203,18 @@ public class RolyDPlus
         isConnected = connected;
     }
 
-    public static synchronized void setReadyToQuit(boolean readyToQuit)
+    public static synchronized void setHasDisconnected(boolean hasDisconnected)
     {
-        RolyDPlus.readyToQuit = readyToQuit;
+        RolyDPlus.hasDisconnected = hasDisconnected;
+    }
+
+    public static void setUsername(String username)
+    {
+        RolyDPlus.username = username;
+    }
+
+    public static void setPassword(String password)
+    {
+        RolyDPlus.password = password;
     }
 }

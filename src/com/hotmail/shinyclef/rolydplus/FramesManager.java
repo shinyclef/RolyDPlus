@@ -47,7 +47,7 @@ public class FramesManager
         frameLogin.disableControls();
     }
 
-    public static void enableServerInteracton()
+    public static void enableServerInteraction()
     {
         frameChat.enableControls();
         frameLogin.enableControls();

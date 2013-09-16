@@ -128,6 +128,10 @@ public class FrameLogin extends JFrame
                     return;
                 }
 
+                //set account details assuming success
+                RolyDPlus.setUsername(usernameInput);
+                RolyDPlus.setPassword(new String(passwordInput));
+
                 //send login request then wait
                 NetProtocolHelper.attemptLogin(usernameInput, new String(passwordInput));
                 attemptingLoginFeedback();
@@ -139,30 +143,23 @@ public class FrameLogin extends JFrame
         }
     }
 
-    public void loginReply(boolean successfulLogin)
+    public void unsuccessfulLoginReply()
     {
-        if (successfulLogin)
+        if (attemptsRemaining > 1)
         {
-            RolyDPlus.login();
+            if (firstAttempt)
+            {
+                feedbackLabel.setVisible(true);
+                firstAttempt = false;
+            }
+
+            attemptsRemaining = attemptsRemaining - 1;
+            unsuccessfulAttemptFeedback();
         }
         else
         {
-            if (attemptsRemaining > 1)
-            {
-                if (firstAttempt)
-                {
-                    feedbackLabel.setVisible(true);
-                    firstAttempt = false;
-                }
-
-                attemptsRemaining = attemptsRemaining - 1;
-                unsuccessfulAttemptFeedback();
-            }
-            else
-            {
-                //Trigger Lockout!!
-                RolyDPlus.initializeExit(0);
-            }
+            //Trigger Lockout!!
+            RolyDPlus.initializeExit(0);
         }
     }
 

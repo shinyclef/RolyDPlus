@@ -18,9 +18,11 @@ public class NetProtocol
     protected static final String CHAT_MARKER = "*";
     protected static final String CUSTOM_COMMAND_MARKER = "@";
     protected static final String MC_COMMAND_MARKER = "/";
-    public static final String PING = CUSTOM_COMMAND_MARKER + "P";
+    public static final String PING = "P";
+
     public static final String QUIT_MESSAGE = CUSTOM_COMMAND_MARKER + "Disconnect";
     public static final String QUIT_MESSAGE_CLOSING = QUIT_MESSAGE + ":Closing";
+    public static final String QUIT_MESSAGE_TIMEOUT = QUIT_MESSAGE + ":Timeout";
     public static final String POISON_PILL_OUT = CUSTOM_COMMAND_MARKER + "PoisonPill";
 
     private static final int SECOND_UNTIL_FIRST_RETRY = 20;
@@ -103,7 +105,6 @@ public class NetProtocol
                 NetProtocolHelper.processOnlineChange(args[0], args[1], args[2]);
                 break;
         }
-
     }
 
     private static void processMCCommand(String input)
@@ -137,10 +138,24 @@ public class NetProtocol
         FramesManager.getFrameChat().writeColouredLine(message);
     }
 
-    public static void processServerShutdown()
+    public static void processTimeout()
     {
+        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
+                "Connection timed out. Attempting to reconnect.");
+        NetProtocol.processDisconnect();
+        RolyDPlus.reconnect();
+    }
+
+    public static void processDisconnect()
+    {
+        //stop pinger
+        RolyDPlus.getPinger().interrupt();
+
         //send poison pill to out
         processOutput(POISON_PILL_OUT);
+
+        //close socket
+        RolyDPlus.closeSocket();
 
         //inform user that server has shut down
         String message = PINK + "Connection lost.";

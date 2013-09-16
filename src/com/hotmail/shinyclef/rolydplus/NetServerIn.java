@@ -2,8 +2,6 @@ package com.hotmail.shinyclef.rolydplus;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
 
 /**
  * User: Shinyclef
@@ -43,9 +41,20 @@ public class NetServerIn implements Runnable
         }
         catch (IOException e)
         {
-            FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "IO Exception: " + e.getMessage());
+            if (e.getMessage().equals("Read timed out"))
+            {
+                NetProtocol.processTimeout();
+            }
+            else
+            {
+                FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "IO Exception: " + e.getMessage());
+            }
         }
 
-        NetProtocol.processServerShutdown();
+        NetProtocol.processDisconnect();
+        if (RolyDPlus.DEV_BUILD)
+        {
+            System.out.println("NetServerIn closing.");
+        }
     }
 }

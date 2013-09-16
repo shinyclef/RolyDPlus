@@ -14,17 +14,20 @@ public class NetProtocolHelper extends NetProtocol
 
     public static void processLoginReply(String[] args)
     {
-        boolean reply;
+        boolean isReconnecting = RolyDPlus.hasLoggedIn();
+
+        //successful login
         if (args[1].equalsIgnoreCase("true"))
         {
-            reply = true;
+            RolyDPlus.login(isReconnecting);
         }
-        else
+        else //unsuccessful login
         {
-            reply = false;
+            if (!isReconnecting)
+            {
+                FramesManager.getFrameLogin().unsuccessfulLoginReply();
+            }
         }
-
-        FramesManager.getFrameLogin().loginReply(reply);
     }
 
     public static void attemptLogin(String username, String password)
