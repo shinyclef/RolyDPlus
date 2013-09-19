@@ -44,6 +44,11 @@ public class NetServerIn implements Runnable
             if (e.getMessage().equals("Read timed out"))
             {
                 NetProtocol.processTimeout();
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("NetServerIn closing (IO Exception Timeout).");
+                }
+                return;
             }
             else
             {
@@ -51,10 +56,10 @@ public class NetServerIn implements Runnable
             }
         }
 
-        NetProtocol.processDisconnect();
+        NetProtocol.processDisconnect("Connection lost.");
         if (RolyDPlus.DEV_BUILD)
         {
-            System.out.println("NetServerIn closing.");
+            System.out.println("NetServerIn closing (End of class).");
         }
     }
 }

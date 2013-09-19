@@ -140,13 +140,11 @@ public class NetProtocol
 
     public static void processTimeout()
     {
-        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
-                "Connection timed out. Attempting to reconnect.");
-        NetProtocol.processDisconnect();
+        NetProtocol.processDisconnect("Connection timed out. Attempting to reconnect.");
         RolyDPlus.reconnect();
     }
 
-    public static void processDisconnect()
+    public static void processDisconnect(String disconnectMsg)
     {
         //stop pinger
         RolyDPlus.getPinger().interrupt();
@@ -158,7 +156,7 @@ public class NetProtocol
         RolyDPlus.closeSocket();
 
         //inform user that server has shut down
-        String message = PINK + "Connection lost.";
+        String message = PINK + disconnectMsg;
         FramesManager.getFrameChat().writeColouredLine(message);
 
         //set to disconnected mode

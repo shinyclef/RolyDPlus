@@ -12,15 +12,15 @@ import java.net.UnknownHostException;
 
 public class RolyDPlus
 {
-    public static final boolean DEV_BUILD = true;
-    public static final boolean LOCAL_SERVER = true;
+    public static final boolean DEV_BUILD = false;
+    public static final boolean LOCAL_SERVER = false;
     private static boolean isConnected = false;
     private static boolean hasLoggedIn = false;
 
     private static String SERVER_IP = "0.0.0.0";
     private static int SERVER_PORT = 0;
     private static Thread pinger;
-    private static final int TIMEOUT_SECONDS = 10;
+    private static final int TIMEOUT_SECONDS = 30;
     public static final int PING_INTERVAL_SECONDS = 25;
 
     private static String username;
@@ -142,7 +142,7 @@ public class RolyDPlus
     {
         try
         {
-            Thread.sleep(1000);
+            Thread.sleep(11500);
         }
         catch (InterruptedException e)
         {
@@ -160,8 +160,25 @@ public class RolyDPlus
             initializeExit(0);
         }
 
-        //log back in
-        NetProtocolHelper.attemptLogin(username, password);
+        try
+        {
+            Thread.sleep(1500);
+        }
+        catch (InterruptedException e)
+        {
+
+        }
+
+        //log back in if appropriate, or re-enable login frame controls
+        if (hasLoggedIn())
+        {
+            NetProtocolHelper.attemptLogin(username, password);
+        }
+        else
+        {
+            FramesManager.enableServerInteraction();
+            //FramesManager.getFrameLogin().enableControls();
+        }
     }
 
     /* Getters */

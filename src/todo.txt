@@ -1,6 +1,6 @@
 - kick
 - test/improve permissions re-authoring for r+ (is DB involved and being updated?)
-- prevent dual logins
+- check for /pex reload
 - inv
 - max char length from r+
 - scoreboard
@@ -10,7 +10,6 @@
 - link clicking
 - auto name completion
 - coloured name list, correctly alphabetized
-- timeout checks
 - text highlights
 - sound alerts
 - task bar highlights

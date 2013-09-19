@@ -11,22 +11,27 @@ public class NetProtocolHelper extends NetProtocol
     private static final String COLOUR_CHAR = String.valueOf('\u00A7');
     private static final String ONLINE_LIST_REQUEST = CUSTOM_COMMAND_MARKER + "RequestPlayerList";
 
-
     public static void processLoginReply(String[] args)
     {
         boolean isReconnecting = RolyDPlus.hasLoggedIn();
 
         //successful login
-        if (args[1].equalsIgnoreCase("true"))
+        switch (args[1].toLowerCase())
         {
-            RolyDPlus.login(isReconnecting);
-        }
-        else //unsuccessful login
-        {
-            if (!isReconnecting)
-            {
-                FramesManager.getFrameLogin().unsuccessfulLoginReply();
-            }
+            case "correct":
+                RolyDPlus.login(isReconnecting);
+                break;
+
+            case "incorrect":
+                FramesManager.getFrameLogin().unsuccessfulLoginReply("incorrect");
+                break;
+
+            default:
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("WARNING: Default case triggered in NetProtocolHelper.processLoginReply.");
+                }
+                break;
         }
     }
 

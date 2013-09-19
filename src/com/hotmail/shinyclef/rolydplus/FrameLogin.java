@@ -143,7 +143,7 @@ public class FrameLogin extends JFrame
         }
     }
 
-    public void unsuccessfulLoginReply()
+    public void unsuccessfulLoginReply(String reason)
     {
         if (attemptsRemaining > 1)
         {
@@ -154,7 +154,20 @@ public class FrameLogin extends JFrame
             }
 
             attemptsRemaining = attemptsRemaining - 1;
-            unsuccessfulAttemptFeedback();
+
+            switch (reason)
+            {
+                case "incorrect":
+                    unsuccessfulAttemptFeedback();
+                    break;
+
+                default:
+                    if (RolyDPlus.DEV_BUILD)
+                    {
+                        System.out.println("WARNING: Default case triggered in FrameLogin.unsuccessfulLoginReply.");
+                    }
+                    break;
+            }
         }
         else
         {
