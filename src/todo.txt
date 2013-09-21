@@ -3,7 +3,6 @@
 - check for /pex reload
 - inv
 - max char length from r+
-- scoreboard
 - fix player list not resizing bug
 - make text bar active when chat becomes active
 - fix newline bug
