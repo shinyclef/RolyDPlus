@@ -102,7 +102,10 @@ public class NetProtocol
                 break;
 
             case "ServerJoin": case "ServerQuit": case "ClientJoin": case "ClientQuit":
-                NetProtocolHelper.processOnlineChange(args[0], args[1], args[2]);
+                if (RolyDPlus.hasLoggedIn())
+                {
+                    NetProtocolHelper.processOnlineChange(args[0], args[1], args[2]);
+                }
                 break;
         }
     }
@@ -126,6 +129,12 @@ public class NetProtocol
 
     private static void processChat(String input)
     {
+        //don't process any chat if client has not logged in yet
+        if (!RolyDPlus.hasLoggedIn())
+        {
+            return;
+        }
+
         if (input.length() < 3)
         {
             return;

@@ -145,6 +145,12 @@ public class FrameLogin extends JFrame
 
     public void unsuccessfulLoginReply(String reason)
     {
+        if (reason.equalsIgnoreCase(NetProtocolHelper.REASON_OUT_OF_DATE))
+        {
+            clientOutOfDateFeedback();
+            return;
+        }
+
         if (attemptsRemaining > 1)
         {
             if (firstAttempt)
@@ -157,7 +163,8 @@ public class FrameLogin extends JFrame
 
             switch (reason)
             {
-                case "incorrect":
+                case NetProtocolHelper.REASON_NO_USER:
+                case NetProtocolHelper.REASON_BAD_PASSWORD:
                     unsuccessfulAttemptFeedback();
                     break;
 
@@ -194,6 +201,14 @@ public class FrameLogin extends JFrame
     {
         feedbackLabel.setForeground(Color.RED);
         feedbackLabel.setText("<html><center>You must enter a valid username and password.</center></html>");
+        feedbackLabel.setVisible(true);
+    }
+
+    private void clientOutOfDateFeedback()
+    {
+        feedbackLabel.setForeground(Color.RED);
+        feedbackLabel.setText("<html><center>This version of RolyDPlus is out of date. " +
+                "Please download the latest version.</center></html>");
         feedbackLabel.setVisible(true);
     }
 

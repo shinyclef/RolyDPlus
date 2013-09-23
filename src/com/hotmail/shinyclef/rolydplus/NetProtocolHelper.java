@@ -11,34 +11,48 @@ public class NetProtocolHelper extends NetProtocol
     private static final String COLOUR_CHAR = String.valueOf('\u00A7');
     private static final String ONLINE_LIST_REQUEST = CUSTOM_COMMAND_MARKER + "RequestPlayerList";
 
+    public static final String CORRECT = "Correct";
+    public static final String INCORRECT = "Incorrect";
+    public static final String REASON_NO_USER = "NoUser";
+    public static final String REASON_BAD_PASSWORD = "UserPass";
+    public static final String REASON_OUT_OF_DATE = "OutOfDate";
+    public static final String DUPLICATE = "Duplicate";
+
+
     public static void processLoginReply(String[] args)
     {
         boolean isReconnecting = RolyDPlus.hasLoggedIn();
 
-        //successful login
-        switch (args[1].toLowerCase())
+        //successful login check
+        switch (args[1])
         {
-            case "correct":
+            case CORRECT:
                 RolyDPlus.login(isReconnecting);
                 break;
 
-            case "incorrect":
-                FramesManager.getFrameLogin().unsuccessfulLoginReply("incorrect");
+            case INCORRECT:
+                processFailedLoginReply(args[2]);
                 break;
 
             default:
                 if (RolyDPlus.DEV_BUILD)
                 {
-                    System.out.println("WARNING: Default case triggered in NetProtocolHelper.processLoginReply.");
+                    System.out.println("WARNING: Default case triggered in NetProtocolHelper.processLoginReply. " +
+                            "args[1] == " + args[1]);
                 }
                 break;
         }
     }
 
+    private static void processFailedLoginReply(String reason)
+    {
+        FramesManager.getFrameLogin().unsuccessfulLoginReply(reason);
+    }
+
     public static void attemptLogin(String username, String password)
     {
         //formulate login request
-        String message = "@Login:" + username + ":" + password;
+        String message = "@Login:" + RolyDPlus.VERSION + ":" + username + ":" + password;
 
         //send it
         processOutput(message);
@@ -46,7 +60,6 @@ public class NetProtocolHelper extends NetProtocol
 
     public static void processDisconnect(String[] args)
     {
-
         //args[0] is "Disconnect. args[1] should be something.
         if (args.length < 2)
         {

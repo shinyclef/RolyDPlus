@@ -1,6 +1,7 @@
-- kick
-- test/improve permissions re-authoring for r+ (is DB involved and being updated?)
+- make client ignore server traffic if not logged in
+- change permissions checking to vault hook. currently perms will only update on player server join
 - check for /pex reload
+- kick
 - inv
 - max char length from r+
 - fix player list not resizing bug

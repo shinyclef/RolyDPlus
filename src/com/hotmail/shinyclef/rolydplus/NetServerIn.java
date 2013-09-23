@@ -27,6 +27,11 @@ public class NetServerIn implements Runnable
         {
             while ((fromServer = in.readLine()) != null)
             {
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("In: " + fromServer);
+                }
+
                 if (!fromServer.equals(""))
                 {
                     NetProtocol.processInput(fromServer);
