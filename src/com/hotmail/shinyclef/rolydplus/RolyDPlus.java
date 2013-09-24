@@ -1,5 +1,6 @@
 package com.hotmail.shinyclef.rolydplus;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -32,18 +33,34 @@ public class RolyDPlus
 
     public static void main(String[] args)
     {
+        String connectionError = "Sorry, it looks like you can't connect to RolyDPlus.\n" +
+                "This happens when the server is down, when the R+ service is disabled,\n" +
+                "or when something else is preventing you from reaching rolyd.com.\n" +
+                "Please try again later!";
+
         try
         {
             setupConnection();
         }
         catch (UnknownHostException e)
         {
-            System.err.println("Don't know about host: " + SERVER_IP + ":" + SERVER_PORT);
+            JOptionPane.showConfirmDialog(new JFrame(), connectionError, "Cannot Connect",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
+
+            if (DEV_BUILD)
+            {
+                System.err.println("Don't know about host: " + SERVER_IP + ":" + SERVER_PORT);
+            }
             initializeExit(0);
         }
         catch (IOException e)
         {
-            System.err.println("Couldn't get I/O for the connection to: " + SERVER_IP + ":" + SERVER_PORT);
+            JOptionPane.showConfirmDialog(new JFrame(), connectionError, "Cannot Connect",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
+            if (DEV_BUILD)
+            {
+                System.err.println("Couldn't get I/O for the connection to: " + SERVER_IP + ":" + SERVER_PORT);
+            }
             initializeExit(0);
         }
 
