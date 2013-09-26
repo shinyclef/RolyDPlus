@@ -12,6 +12,8 @@ public class NetProtocolHelper extends NetProtocol
     private static final String ONLINE_LIST_REQUEST = CUSTOM_COMMAND_MARKER + "RequestPlayerList";
 
     public static final String CORRECT = "Correct";
+    public static final String STANDARD_USER = "Standard";
+    public static final String MOD_USER = "Mod";
     public static final String INCORRECT = "Incorrect";
     public static final String REASON_NO_USER = "NoUser";
     public static final String REASON_BAD_PASSWORD = "UserPass";
@@ -27,7 +29,7 @@ public class NetProtocolHelper extends NetProtocol
         switch (args[1])
         {
             case CORRECT:
-                RolyDPlus.login(isReconnecting);
+                RolyDPlus.login(isReconnecting, args);
                 break;
 
             case INCORRECT:

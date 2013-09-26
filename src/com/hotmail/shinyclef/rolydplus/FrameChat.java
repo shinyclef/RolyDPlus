@@ -213,27 +213,47 @@ public class FrameChat extends JFrame
         onlinePlayers.clear();
         String[] players = formattedListString.split(",");
 
-        for (String player : players)
+        for (String listItem : players)
         {
-            //the name will be prefixed with '-' (client only), '+' (both), or nothing (server only) attached
+            /* 'I' invisible, 'B' logged in both, 'C' client only, ':' to separate special chars with name
+            * 'I' will always come first if present.
+            * eg. IB:johnny, sammy, C:shiny, I:david */
 
-            String suffix;
-            if (player.startsWith("-"))
+            String name;
+            String prefix = "", suffix = "";
+            if (listItem.contains(":"))
             {
-                player = player.substring(1);
-                suffix = "(-)";
-            }
-            else if (player.startsWith("+"))
-            {
-                player = player.substring(1);
-                suffix = "(+)";
+                String leadingChars = listItem.substring(0, listItem.indexOf(":"));
+                name = listItem.substring(listItem.indexOf(":") + 1);
+
+                if (leadingChars.charAt(0) == 'I')
+                {
+                    if (!RolyDPlus.isMod())
+                    {
+                        continue;
+                    }
+                    name = name.substring(1);
+                    prefix = "(inv)";
+                }
+
+                if (leadingChars.length() > 1)
+                {
+                    if (leadingChars.charAt(1) == 'B')
+                    {
+                        suffix = "(+)";
+                    }
+                    else if (leadingChars.charAt(1) == 'C')
+                    {
+                        suffix = "(-)";
+                    }
+                }
             }
             else
             {
-                suffix = "";
+                name = listItem;
             }
 
-            onlinePlayers.put(player, new JLabel(player + suffix));
+            onlinePlayers.put(name, new JLabel(prefix + name + suffix));
         }
 
         redrawList();
@@ -532,6 +552,11 @@ public class FrameChat extends JFrame
     {
         textField.setEnabled(false);
         sendButton.setEnabled(false);
+    }
+
+    public void setFocusToTextBox()
+    {
+
     }
 
     private void test()

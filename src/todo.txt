@@ -1,6 +1,4 @@
-- change permissions checking to vault hook. currently perms will only update on player server join
-- check for /pex reload
-- kick
+- kick and ban messages?
 - inv
 - max char length from r+
 - fix player list not resizing bug
@@ -13,3 +11,4 @@
 - sound alerts
 - task bar highlights
 - auto update / update available confirmation
+- find out why hasPermission runs twice on each command?

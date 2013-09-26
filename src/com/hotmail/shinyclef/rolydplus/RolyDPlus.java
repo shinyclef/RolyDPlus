@@ -27,6 +27,7 @@ public class RolyDPlus
 
     private static String username;
     private static String password;
+    private static boolean isMod;
 
     private static Socket socket;
     private static boolean hasDisconnected = false;
@@ -140,8 +141,18 @@ public class RolyDPlus
         }
     }
 
-    public static void login(boolean reconnecting)
+    public static void login(boolean reconnecting, String[] args)
     {
+        String userType = args[2];
+        if (userType.equals(NetProtocolHelper.MOD_USER))
+        {
+            isMod = true;
+        }
+        else
+        {
+            isMod = false;
+        }
+
         NetProtocolHelper.requestOnlineList();
         if (reconnecting)
         {
@@ -229,6 +240,11 @@ public class RolyDPlus
     public static String getPassword()
     {
         return password;
+    }
+
+    public static boolean isMod()
+    {
+        return isMod;
     }
 
     /* Setters */
