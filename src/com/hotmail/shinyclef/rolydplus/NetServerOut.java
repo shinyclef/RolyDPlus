@@ -32,6 +32,11 @@ public class NetServerOut implements Runnable
             while (!msgOut.startsWith(NetProtocol.QUIT_MESSAGE))
             {
                 msgOut = toServerQueue.take();
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("Out: " + msgOut);
+                }
+
                 if (msgOut.startsWith(NetProtocol.POISON_PILL_OUT))
                 {
                     break;

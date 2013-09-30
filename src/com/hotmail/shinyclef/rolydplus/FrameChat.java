@@ -144,7 +144,6 @@ public class FrameChat extends JFrame
         sendButton.addActionListener(listener);
         testButton.addActionListener(listener);
 
-
         testButton.setVisible(TEST_BUTTON_VISIBLE);
     }
 
@@ -163,23 +162,14 @@ public class FrameChat extends JFrame
         }
     }
 
-    public void addOrAlterPlayer(String playerName, String currentPresence)
+    public void addOrAlterPlayer(String playerName, String locationsInfo)
     {
-        //get suffix
-        String suffix = "";
-
-        if (currentPresence.equals("Client"))
-        {
-            suffix = "(-)";
-        }
-        else if (currentPresence.equals("Both"))
-        {
-            suffix = "(+)";
-        }
-        //(if "Server", do nothing)
+        //get prefix and suffix
+        String prefix = getInvisibilityPrefix(locationsInfo);
+        String suffix = getOnlineSuffix(locationsInfo);
 
         //add player to online list and redraw
-        onlinePlayers.put(playerName, new JLabel(playerName + suffix));
+        onlinePlayers.put(playerName, new JLabel(prefix + playerName + suffix));
         redrawList();
     }
 
@@ -211,67 +201,140 @@ public class FrameChat extends JFrame
     public void processFormattedOnlinePlayersList(String formattedListString)
     {
         onlinePlayers.clear();
-        String[] players = formattedListString.split(",");
+        String[] onlineList = formattedListString.split(",");
 
-        for (String listItem : players)
+        for (String listItem : onlineList)
         {
-            /* 'I' invisible, 'B' logged in both, 'C' client only, ':' to separate special chars with name
-            * 'I' will always come first if present.
-            * eg. IB:johnny, sammy, C:shiny, I:david */
+            /* 'S' server, 'C' client, 'B' both, 'N' none (should never happen)
+            * first char upper case for online locations, second char lower case for invisible locations
+            * '.' to separate special chars with name
+            * eg. Ss.johnny, sammy, Cn.shiny, Ns:david */
 
-            String name;
-            String prefix = "", suffix = "";
-            if (listItem.contains(":"))
+            String locationsInfo = listItem.substring(0, listItem.indexOf("."));
+            String name = listItem.substring(listItem.indexOf(".") + 1);
+
+            char onlineLocations = locationsInfo.charAt(0);
+            char invisibleLocations = locationsInfo.charAt(1);
+
+            String prefix = getInvisibilityPrefix(locationsInfo);
+            String suffix = getOnlineSuffix(locationsInfo);
+
+            if (canSeeThisPlayer(locationsInfo))
             {
-                String leadingChars = listItem.substring(0, listItem.indexOf(":"));
-                name = listItem.substring(listItem.indexOf(":") + 1);
-
-                if (leadingChars.charAt(0) == 'I')
-                {
-                    if (!RolyDPlus.isMod())
-                    {
-                        continue;
-                    }
-                    name = name.substring(1);
-                    prefix = "(inv)";
-                }
-
-                if (leadingChars.length() > 1)
-                {
-                    if (leadingChars.charAt(1) == 'B')
-                    {
-                        suffix = "(+)";
-                    }
-                    else if (leadingChars.charAt(1) == 'C')
-                    {
-                        suffix = "(-)";
-                    }
-                }
+                onlinePlayers.put(name, new JLabel(prefix + name + suffix));
             }
-            else
-            {
-                name = listItem;
-            }
-
-            onlinePlayers.put(name, new JLabel(prefix + name + suffix));
         }
-
         redrawList();
     }
 
     //handles the online list, not the chat notification
-    public void processOnlineChangeEvent(String playerName, String currentPresence)
+    public void processStatusChangeEvent(String playerName, String locationsInfo)
     {
         //user has logged out of everything
-        if (currentPresence.equals("None"))
+        if (!canSeeThisPlayer(locationsInfo))
         {
             removePlayer(playerName);
         }
         else
         {
-            addOrAlterPlayer(playerName, currentPresence);
+            addOrAlterPlayer(playerName, locationsInfo);
         }
     }
+
+    private String getInvisibilityPrefix(String locationsInfo)
+    {
+        char onlineLocations = locationsInfo.charAt(0);
+        char invisibleLocations = locationsInfo.charAt(1);
+
+        //get invisibility prefix for mods
+        if (RolyDPlus.isMod())
+        {
+            if (onlineLocations == 'S' && invisibleLocations == 's')
+            {
+                return "(s)";
+            }
+            else if (onlineLocations == 'C' && invisibleLocations == 'c')
+            {
+                return "(c)";
+            }
+            else if (onlineLocations == 'B')
+            {
+                if (invisibleLocations != 'n')
+                {
+                    return "(" + invisibleLocations + ")";
+                }
+            }
+        }
+
+        return "";
+    }
+
+    private String getOnlineSuffix(String locationsInfo)
+    {
+        char onlineLocations = locationsInfo.charAt(0);
+        char invisibleLocations = locationsInfo.charAt(1);
+
+        //get online locations for mods
+        if (RolyDPlus.isMod())
+        {
+            if (onlineLocations == 'B')
+            {
+                return "(+)";
+            }
+            else if (onlineLocations == 'C')
+            {
+                return "(-)";
+            }
+        }
+        else //online location for everyone
+        {
+            if (onlineLocations == 'B')
+            {
+                if (invisibleLocations == 'n')
+                {
+                    return "(+)";
+                }
+                if (invisibleLocations == 's')
+                {
+                    return "(-)";
+                }
+            }
+            else if (onlineLocations == 'C' && invisibleLocations != 'c' && invisibleLocations != 'b')
+            {
+                return "(-)";
+            }
+        }
+        return "";
+    }
+
+    private boolean canSeeThisPlayer(String locationsInfo)
+    {
+        char onlineLocations = locationsInfo.charAt(0);
+        char invisibleLocations = locationsInfo.charAt(1);
+
+        if (RolyDPlus.isMod() && onlineLocations != 'N')
+        {
+            return true;
+        }
+
+        //determine if a this non-mod client can see the player
+        if (onlineLocations == 'B' && invisibleLocations != 'b')
+        {
+            return true;
+        }
+        else if (onlineLocations == 'S' && invisibleLocations != 's' && invisibleLocations != 'b')
+        {
+            return true;
+        }
+        else if (onlineLocations == 'C' && invisibleLocations != 'c' && invisibleLocations != 'b')
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
 
     private static void setupCodeMap()
     {

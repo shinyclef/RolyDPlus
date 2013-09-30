@@ -101,10 +101,17 @@ public class NetProtocol
                 NetProtocolHelper.processOnlineList(args[1]);
                 break;
 
-            case "ServerJoin": case "ServerQuit": case "ClientJoin": case "ClientQuit":
+            case "StatusChange":
                 if (RolyDPlus.hasLoggedIn())
                 {
-                    NetProtocolHelper.processOnlineChange(args[0], args[1], args[2]);
+                    NetProtocolHelper.processStatusChange(args[1], args[2]);
+                }
+                break;
+
+            default:
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("Warning! Default case triggered in NetProtocolHelper.processCustomCommand.");
                 }
                 break;
         }

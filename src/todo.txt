@@ -1,7 +1,7 @@
 - kick and ban messages?
-- inv
 - max char length from r+
 - fix player list not resizing bug
+- refresh chat tags on pex reload
 - make text bar active when chat becomes active
 - fix newline bug
 - link clicking

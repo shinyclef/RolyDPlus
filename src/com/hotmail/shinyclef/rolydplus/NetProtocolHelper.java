@@ -134,32 +134,14 @@ public class NetProtocolHelper extends NetProtocol
         FramesManager.getFrameChat().processFormattedOnlinePlayersList(onlinePlayerList);
     }
 
-    public static void processOnlineChange(String action, String playerName, String currentPresence)
+    public static void processStatusChange(String playerName, String locationsInfo)
     {
-        //get action String
-        String actionMsg = "";
-        if (action.equals("ServerJoin"))
-        {
-            actionMsg = " joined the game!";
-        }
-        else if (action.equals("ServerQuit"))
-        {
-            actionMsg = " left the game!";
-        }
-        else if (action.equals("ClientJoin"))
-        {
-            actionMsg = " joined RolyDPlus!";
-        }
-        else if (action.equals("ClientQuit"))
-        {
-            actionMsg = " left RolyDPlus!";
-        }
-
-        //write to chat
-        String message = COLOUR_CHAR + "f" + playerName + COLOUR_CHAR + "e" + actionMsg;
-        FramesManager.getFrameChat().writeColouredLine(message);
-
         //change online list
-        FramesManager.getFrameChat().processOnlineChangeEvent(playerName, currentPresence);
+        FramesManager.getFrameChat().processStatusChangeEvent(playerName, locationsInfo);
+    }
+
+    private static void processVisibilityChange(String playerName, String currentPresence, boolean isInvisible)
+    {
+
     }
 }
