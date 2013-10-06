@@ -14,8 +14,8 @@ import java.net.UnknownHostException;
 public class RolyDPlus
 {
     public static final boolean DEV_BUILD = false;
-    public static final boolean LOCAL_SERVER = false;
-    public static final String VERSION = "1.0.2";
+    public static final boolean LOCAL_SERVER = true;
+    public static final String VERSION = "1.0.3";
     private static boolean isConnected = false;
     private static boolean hasLoggedIn = false;
 
@@ -32,13 +32,13 @@ public class RolyDPlus
     private static Socket socket;
     private static boolean hasDisconnected = false;
 
+    private static String connectionError = "Sorry, it looks like you can't connect to RolyDPlus.\n" +
+            "This happens when the server is down, when the R+ service is disabled,\n" +
+            "or when something else is preventing you from reaching rolyd.com.\n" +
+            "Please try again later!";
+
     public static void main(String[] args)
     {
-        String connectionError = "Sorry, it looks like you can't connect to RolyDPlus.\n" +
-                "This happens when the server is down, when the R+ service is disabled,\n" +
-                "or when something else is preventing you from reaching rolyd.com.\n" +
-                "Please try again later!";
-
         try
         {
             setupConnection();
@@ -164,30 +164,42 @@ public class RolyDPlus
             FramesManager.getFrameLogin().setVisible(false);
             hasLoggedIn = true;
         }
+
+        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "Connected");
     }
 
-    public static void reconnect()
+    public static void reconnect(int secondDelay)
     {
+        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
+                "Attempting to reconnect in " + secondDelay + " seconds.");
+
+        //wait for the specified delay time
         try
         {
-            Thread.sleep(11500);
+            Thread.sleep(secondDelay * 1000);
         }
         catch (InterruptedException e)
         {
 
         }
 
+        //make sure previous connection is closed
+        closeSocket();
+
         //setup a new connection
+        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "Reconnecting...");
         try
         {
             setupConnection();
         }
         catch (IOException e)
         {
-            System.err.println("Couldn't get I/O for the connection to: " + SERVER_IP + ":" + SERVER_PORT);
-            initializeExit(0);
+            FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
+                    "Connection failed. Please try again later.");
+            return;
         }
 
+        //wait a bit before logging in
         try
         {
             Thread.sleep(1500);
@@ -205,7 +217,6 @@ public class RolyDPlus
         else
         {
             FramesManager.enableServerInteraction();
-            //FramesManager.getFrameLogin().enableControls();
         }
     }
 

@@ -156,11 +156,11 @@ public class NetProtocol
 
     public static void processTimeout()
     {
-        NetProtocol.processDisconnect("Connection timed out. Attempting to reconnect.");
-        RolyDPlus.reconnect();
+        NetProtocol.processDisconnect("Connection timed out. Attempting to reconnect.", 10);
     }
 
-    public static void processDisconnect(String disconnectMsg)
+    /* Reconnect delay of -1 if you don't want to reconnect. */
+    public static void processDisconnect(String disconnectMsg, int reconnectDelay)
     {
         //stop pinger
         RolyDPlus.getPinger().interrupt();
@@ -178,5 +178,10 @@ public class NetProtocol
         //set to disconnected mode
         RolyDPlus.setConnected(false);
         FramesManager.disableServerInteraction();
+
+        if (reconnectDelay >= 0)
+        {
+            RolyDPlus.reconnect(reconnectDelay);
+        }
     }
 }

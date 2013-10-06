@@ -4,6 +4,8 @@ import sun.font.FontFamily;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -28,6 +30,7 @@ public class FrameChat extends JFrame
     private static Map<Integer, Character> styleMap;
     private static Map<Integer, Character> activeStyles;
 
+    private static final int MAX_LINE_LENGTH = 150;
     private static final int MAX_LINES = 3;
     private static final Color CHAT_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .1f);
     private static final Color LIST_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .85f);
@@ -144,6 +147,9 @@ public class FrameChat extends JFrame
         sendButton.addActionListener(listener);
         testButton.addActionListener(listener);
 
+        //text field listener to watch for max line length
+        setupTextFieldDocumentListener();
+
         testButton.setVisible(TEST_BUTTON_VISIBLE);
     }
 
@@ -160,6 +166,54 @@ public class FrameChat extends JFrame
                 sendChatLine();
             }
         }
+    }
+
+    private void setupTextFieldDocumentListener()
+    {
+        textField.getDocument().addDocumentListener(new DocumentListener()
+        {
+            Document doc = textField.getDocument();
+
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                if (doc.getLength() > MAX_LINE_LENGTH)
+                {
+                    SwingUtilities.invokeLater(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            try
+                            {
+                                int cursorPos = textField.getCaretPosition();
+                                textField.setText(doc.getText(0, MAX_LINE_LENGTH));
+                                textField.setCaretPosition(cursorPos > MAX_LINE_LENGTH ? MAX_LINE_LENGTH : cursorPos);
+                            }
+                            catch (BadLocationException e)
+                            {
+                                if (RolyDPlus.DEV_BUILD)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                //nothing needed
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+
+            }
+        });
     }
 
     public void addOrAlterPlayer(String playerName, String locationsInfo)
@@ -333,8 +387,6 @@ public class FrameChat extends JFrame
 
         return false;
     }
-
-
 
     private static void setupCodeMap()
     {
@@ -518,7 +570,7 @@ public class FrameChat extends JFrame
         int length = 0;
         int previousRelativeIndex, currentRelativeIndex = -1;
         int previousAbsoluteIndex, currentAbsoluteIndex = -1;
-        char previousColourChar, currentColourChar = '-';
+        char previousColourChar, currentColourChar = 'f';
         for (Map.Entry<Integer, Character> entry : colourMap.entrySet())
         {
             //update indecies and colours
@@ -625,5 +677,33 @@ public class FrameChat extends JFrame
     private void test()
     {
 
+    }
+
+
+    /* Custom textField */
+    private class JTextFieldLimit extends PlainDocument
+    {
+        private int limit;
+        JTextFieldLimit(int limit)
+        {
+            super();
+            this.limit = limit;
+        }
+
+        JTextFieldLimit(int limit, boolean upper)
+        {
+            super();
+            this.limit = limit;
+        }
+
+        public void insertString(int offset, String str, AttributeSet attr) throws BadLocationException
+        {
+            if (str == null)
+                return;
+
+            if ((getLength() + str.length()) <= limit) {
+                super.insertString(offset, str, attr);
+            }
+        }
     }
 }

@@ -1,14 +1,14 @@
-- kick and ban messages?
-- max char length from r+
+Features for full release:
+
+After full release:
 - fix player list not resizing bug
 - refresh chat tags on pex reload
 - make text bar active when chat becomes active
-- fix newline bug
+- fix newline bug (?what's this?)
 - link clicking
+- kick and ban messages?
 - auto name completion
 - coloured name list, correctly alphabetized
 - text highlights
 - sound alerts
 - task bar highlights
-- auto update / update available confirmation
-- find out why hasPermission runs twice on each command?
