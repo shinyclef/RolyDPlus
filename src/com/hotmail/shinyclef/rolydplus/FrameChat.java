@@ -1,17 +1,12 @@
 package com.hotmail.shinyclef.rolydplus;
 
-import sun.font.FontFamily;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.*;
 
 /**
@@ -22,8 +17,6 @@ import java.util.*;
 
 public class FrameChat extends JFrame
 {
-    private static final boolean TEST_BUTTON_VISIBLE = false;
-
     private static final String COLOUR_CHAR = String.valueOf('\u00A7');
     private static Map<Character, SimpleAttributeSet> codeMap;
     private static Map<Integer, Character> colourMap;
@@ -81,10 +74,10 @@ public class FrameChat extends JFrame
         contentPane = getContentPane();
 
         //some containers for layout
-        JPanel topFlow = new JPanel();
+        JPanel topFlow = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 2));
         rightBox = new JPanel();
         rightBox.setLayout(new BoxLayout(rightBox, BoxLayout.Y_AXIS));
-        rightBox.setBorder(new EmptyBorder(new Insets(5, 5, 5, 18)));
+        rightBox.setBorder(new EmptyBorder(new Insets(5, 5, 5, 6)));
         JPanel bottomGridBag = new JPanel(new GridBagLayout());
         GridBagConstraints c;
         contentPane.add(topFlow, BorderLayout.NORTH);
@@ -92,27 +85,30 @@ public class FrameChat extends JFrame
 
         //create the components
         textPane = new JTextPane();
+        textPane.setEditorKit(new WrapEditorKit()); //WORD WRAP BUG WORKAROUND
         JScrollPane chatScrollPane = new JScrollPane(textPane);
         listScrollPane = new JScrollPane(rightBox);
         vScrollBar = chatScrollPane.getVerticalScrollBar();
         textField = new JTextField();
         chatDoc = textPane.getStyledDocument();
-        JButton testButton = new JButton("Test");
+        JButton logoutButton = new JButton("Logout");
         sendButton = new JButton("Send");
 
         //add the components to the panels
         contentPane.add(chatScrollPane, BorderLayout.CENTER);
         contentPane.add(listScrollPane, BorderLayout.EAST);
-        topFlow.add(testButton);
+        topFlow.add(logoutButton);
 
         //set some properties
         textField.setPreferredSize(new Dimension(0, 25));
         textPane.setBackground(CHAT_BACKGROUND_COLOR);
         rightBox.setBackground(LIST_BACKGROUND_COLOR);
-        sendButton.setFont(new Font("Arial", 1, 10));
+        Font buttonFont = new Font("Arial", 1, 10);
+        sendButton.setFont(buttonFont);
+        logoutButton.setFont(buttonFont);
         sendButton.setPreferredSize(new Dimension(60, 24));
+        logoutButton.setPreferredSize(new Dimension(68, 15));
         textPane.setEditable(false);
-        //listScrollPane.setPreferredSize(new Dimension(120, 0));
         listScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         //grid bag text field
@@ -139,27 +135,27 @@ public class FrameChat extends JFrame
         StyleConstants.setLeftIndent(style1, 16);
         StyleConstants.setRightIndent(style1, 16);
 
-        //the listener
+        //the listeners
         ActionListener listener = new InputListener();
 
-        //add the listener to the buttons
+        //add the listeners
         textField.addActionListener(listener);
         sendButton.addActionListener(listener);
-        testButton.addActionListener(listener);
+        logoutButton.addActionListener(listener);
 
         //text field listener to watch for max line length
         setupTextFieldDocumentListener();
 
-        testButton.setVisible(TEST_BUTTON_VISIBLE);
+        //logoutButton.setVisible(true);
     }
 
     class InputListener implements ActionListener
     {
         public void actionPerformed(ActionEvent e)
         {
-            if (e.getActionCommand().equals("Test"))
+            if (e.getActionCommand().equals("Logout"))
             {
-                test();
+                logout();
             }
             else
             {
@@ -248,8 +244,8 @@ public class FrameChat extends JFrame
             label.revalidate();
         }
 
-        //listScrollPane.setPreferredSize(new Dimension(rightBox.getWidth()+ 12, 0));
-        rightBox.repaint();
+        revalidate();
+        repaint();
     }
 
     public void processFormattedOnlinePlayersList(String formattedListString)
@@ -431,12 +427,12 @@ public class FrameChat extends JFrame
         StyleConstants.setForeground(sd, Color.getHSBColor(.833333f, .67f, 1)); //light-purple
         StyleConstants.setForeground(se, Color.getHSBColor(.166666f, .67f, 1)); //yellow
         StyleConstants.setForeground(sf, Color.getHSBColor(0, 0, 1));           //white
-        StyleConstants.setForeground(sk, Color.DARK_GRAY);//magic
-        StyleConstants.setBackground(sk, Color.DARK_GRAY);//magic
-        StyleConstants.setBold(sl, true);           //bold
-        StyleConstants.setStrikeThrough(sm, true);  //strike-through
-        StyleConstants.setUnderline(sn, true);      //underline
-        StyleConstants.setItalic(so, true);         //italic
+        StyleConstants.setForeground(sk, Color.DARK_GRAY);  //magic
+        StyleConstants.setBackground(sk, Color.DARK_GRAY);  //magic
+        StyleConstants.setBold(sl, true);                   //bold
+        StyleConstants.setStrikeThrough(sm, true);          //strike-through
+        StyleConstants.setUnderline(sn, true);              //underline
+        StyleConstants.setItalic(so, true);                 //italic
         //reset
         StyleConstants.setForeground(sr, Color.getHSBColor(0, 0, 1)); //reset to white
         StyleConstants.setBold(sr, false);          //reset bold
@@ -523,7 +519,8 @@ public class FrameChat extends JFrame
                 colourMap.put(codeIndex, codeCharacter);
                 styleMap.put(codeIndex, codeCharacter);
             }
-            else if ((int)codeCharacter > lastColourCharLetterInt) //if codeCharacter is great than 'f'
+            else if ((int)codeCharacter > lastColourCharLetterInt  //if codeCharacter is great than 'f', excluding 'k'
+                    && codeCharacter != 'k')                       //which will be treated under colour logic
             {
                 styleMap.put(codeIndex, codeCharacter);
             }
@@ -669,40 +666,110 @@ public class FrameChat extends JFrame
         sendButton.setEnabled(false);
     }
 
-    public void setFocusToTextBox()
+    public void showFrame()
     {
-
+        FramesManager.getFrameChat().setVisible(true);
+        setFocusToTextField();
     }
 
-    private void test()
+    private void setFocusToTextField()
     {
-
+        textField.requestFocusInWindow();
     }
 
-
-    /* Custom textField */
-    private class JTextFieldLimit extends PlainDocument
+    private void toggleAlwaysOnTop()
     {
-        private int limit;
-        JTextFieldLimit(int limit)
+        if (isAlwaysOnTop())
         {
-            super();
-            this.limit = limit;
+            setAlwaysOnTop(false);
+        }
+        else
+        {
+            setAlwaysOnTop(true);
+        }
+    }
+
+    private void clearChat()
+    {
+        try
+        {
+            chatDoc.remove(0, chatDoc.getLength());
+        }
+        catch (BadLocationException e)
+        {
+            //shouldn't really be a bad location... using location given by the chatDoc itself.
+        }
+    }
+
+    private void logout()
+    {
+        clearChat();
+        RolyDPlus.logout();
+    }
+
+    /* WORKAROUND FOR JAVA 7 WORD WRAP BUG */
+    class WrapEditorKit extends StyledEditorKit
+    {
+        ViewFactory defaultFactory=new WrapColumnFactory();
+        public ViewFactory getViewFactory()
+        {
+            return defaultFactory;
+        }
+    }
+
+    class WrapColumnFactory implements ViewFactory
+    {
+        public View create(Element elem)
+        {
+            String kind = elem.getName();
+            if (kind != null)
+            {
+                switch (kind)
+                {
+                    case AbstractDocument.ContentElementName:
+                        return new WrapLabelView(elem);
+
+                    case AbstractDocument.ParagraphElementName:
+                        return new ParagraphView(elem);
+
+                    case AbstractDocument.SectionElementName:
+                        return new BoxView(elem, View.Y_AXIS);
+
+                    case StyleConstants.ComponentElementName:
+                        return new ComponentView(elem);
+
+                    case StyleConstants.IconElementName:
+                        return new IconView(elem);
+
+                    default:
+                        return new LabelView(elem);
+                }
+            }
+
+            // default to text display
+            return new LabelView(elem);
+        }
+    }
+
+    class WrapLabelView extends LabelView
+    {
+        public WrapLabelView(Element elem)
+        {
+            super(elem);
         }
 
-        JTextFieldLimit(int limit, boolean upper)
+        public float getMinimumSpan(int axis)
         {
-            super();
-            this.limit = limit;
-        }
+            switch (axis)
+            {
+                case View.X_AXIS:
+                    return 0;
 
-        public void insertString(int offset, String str, AttributeSet attr) throws BadLocationException
-        {
-            if (str == null)
-                return;
+                case View.Y_AXIS:
+                    return super.getMinimumSpan(axis);
 
-            if ((getLength() + str.length()) <= limit) {
-                super.insertString(offset, str, attr);
+                default:
+                    throw new IllegalArgumentException("Invalid axis: " + axis);
             }
         }
     }

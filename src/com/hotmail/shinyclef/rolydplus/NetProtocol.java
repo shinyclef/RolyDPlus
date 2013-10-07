@@ -21,6 +21,7 @@ public class NetProtocol
     public static final String PING = "P";
 
     public static final String QUIT_MESSAGE = CUSTOM_COMMAND_MARKER + "Disconnect";
+    public static final String LOGOUT_MESSAGE = CUSTOM_COMMAND_MARKER + "Logout";
     public static final String QUIT_MESSAGE_CLOSING = QUIT_MESSAGE + ":Closing";
     public static final String QUIT_MESSAGE_TIMEOUT = QUIT_MESSAGE + ":Timeout";
     public static final String POISON_PILL_OUT = CUSTOM_COMMAND_MARKER + "PoisonPill";

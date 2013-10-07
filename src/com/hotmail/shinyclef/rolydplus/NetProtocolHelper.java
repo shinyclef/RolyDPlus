@@ -60,6 +60,11 @@ public class NetProtocolHelper extends NetProtocol
         processOutput(message);
     }
 
+    public static void logout()
+    {
+        processOutput(LOGOUT_MESSAGE);
+    }
+
     public static void processDisconnect(String[] args)
     {
         //args[0] is "Disconnect. args[1] should be something.

@@ -13,14 +13,14 @@ import java.net.UnknownHostException;
 
 public class RolyDPlus
 {
-    public static final boolean DEV_BUILD = false;
+    public static final boolean DEV_BUILD = true;
     public static final boolean LOCAL_SERVER = true;
-    public static final String VERSION = "1.0.3";
+    public static final String VERSION = "1.0.5";
     private static boolean isConnected = false;
     private static boolean hasLoggedIn = false;
 
-    private static String SERVER_IP = "0.0.0.0";
-    private static int SERVER_PORT = 0;
+    private static String SERVER_ADDRESS = "www.rolyd.com";
+    private static int SERVER_PORT = 14890;
     private static Thread pinger;
     private static final int TIMEOUT_SECONDS = 30;
     public static final int PING_INTERVAL_SECONDS = 25;
@@ -50,7 +50,7 @@ public class RolyDPlus
 
             if (DEV_BUILD)
             {
-                System.err.println("Don't know about host: " + SERVER_IP + ":" + SERVER_PORT);
+                System.err.println("Don't know about host: " + SERVER_ADDRESS + ":" + SERVER_PORT);
             }
             initializeExit(0);
         }
@@ -60,7 +60,7 @@ public class RolyDPlus
                     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if (DEV_BUILD)
             {
-                System.err.println("Couldn't get I/O for the connection to: " + SERVER_IP + ":" + SERVER_PORT);
+                System.err.println("Couldn't get I/O for the connection to: " + SERVER_ADDRESS + ":" + SERVER_PORT);
             }
             initializeExit(0);
         }
@@ -73,17 +73,12 @@ public class RolyDPlus
     {
         if (LOCAL_SERVER)
         {
-            SERVER_IP = "192.168.1.2";
+            SERVER_ADDRESS = "192.168.1.2";
             SERVER_PORT = 12004;
-        }
-        else //roly's server
-        {
-            SERVER_IP = "www.rolyd.com";
-            SERVER_PORT = 14890;
         }
 
         //socket & reader/writer
-        socket = new Socket(SERVER_IP, SERVER_PORT);
+        socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
         socket.setSoTimeout(TIMEOUT_SECONDS * 1000);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
@@ -160,12 +155,26 @@ public class RolyDPlus
         }
         else
         {
-            FramesManager.getFrameChat().setVisible(true);
+            FramesManager.getFrameChat().showFrame();
             FramesManager.getFrameLogin().setVisible(false);
             hasLoggedIn = true;
         }
 
-        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "Connected");
+        FramesManager.getFrameChat().writeColouredLine(NetProtocol.YELLOW + "Welcome to RolyDPlus!");
+    }
+
+    public static void logout()
+    {
+        isConnected = false;
+        hasLoggedIn = false;
+        username = null;
+        password = null;
+        isMod = false;
+        hasDisconnected = false;
+        NetProtocolHelper.logout();
+        FramesManager.getFrameChat().setVisible(false);
+        FramesManager.getFrameLogin().reset();
+        FramesManager.getFrameLogin().setVisible(true);
     }
 
     public static void reconnect(int secondDelay)

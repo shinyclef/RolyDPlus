@@ -208,7 +208,7 @@ public class FrameLogin extends JFrame
     {
         feedbackLabel.setForeground(Color.RED);
         feedbackLabel.setText("<html><center>This version of RolyDPlus is out of date. " +
-                "Please download the latest version.</center></html>");
+                "Please download the latest version from: www.rolyd.com/rolydplus</center></html>");
         feedbackLabel.setVisible(true);
     }
 
@@ -230,5 +230,12 @@ public class FrameLogin extends JFrame
         feedbackLabel.setText("Server has shut down. Waiting for restart...");
         feedbackLabel.setVisible(true);
 
+    }
+
+    public void reset()
+    {
+        usernameField.setText("");
+        passwordField.setText("");
+        feedbackLabel.setVisible(false);
     }
 }

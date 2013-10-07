@@ -1,10 +1,7 @@
-Features for full release:
+Next Release:
 
-After full release:
-- fix player list not resizing bug
-- refresh chat tags on pex reload
-- make text bar active when chat becomes active
-- fix newline bug (?what's this?)
+Future:
+- new player notification
 - link clicking
 - kick and ban messages?
 - auto name completion
