@@ -1,10 +1,13 @@
 Next Release:
+- new player notification
+- raffle compatibility
+- icon
 
 Future:
-- new player notification
 - link clicking
 - kick and ban messages?
 - auto name completion
+- network traffic encryption
 - coloured name list, correctly alphabetized
 - text highlights
 - sound alerts

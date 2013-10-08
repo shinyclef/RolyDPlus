@@ -21,6 +21,7 @@ public class FrameChat extends JFrame
     private static Map<Character, SimpleAttributeSet> codeMap;
     private static Map<Integer, Character> colourMap;
     private static Map<Integer, Character> styleMap;
+    private static Map<Integer, Character> magicMap;
     private static Map<Integer, Character> activeStyles;
 
     private static final int MAX_LINE_LENGTH = 150;
@@ -49,6 +50,7 @@ public class FrameChat extends JFrame
         onlinePlayers = new TreeMap<>();
         colourMap = new LinkedHashMap<>();
         styleMap = new LinkedHashMap<>();
+        magicMap = new LinkedHashMap<>();
         activeStyles = new LinkedHashMap<>();
         setupCodeMap();
         initializeUI();
@@ -506,27 +508,33 @@ public class FrameChat extends JFrame
         {
             //get index and colour of first colour code
             int codeIndex = line.indexOf(COLOUR_CHAR);
-            if (codeIndex >= line.length() - 1)
-            {
+            if (codeIndex >= line.length() - 1) //if the code char is second last or last character,
+            {                                   //remove the special char + code char and break
                 line = line.substring(0, line.length() - 2);
                 break;
             }
             char codeCharacter = line.charAt(codeIndex + 1);
 
             //put it in the appropriate map/s
-            if (codeCharacter == 'r') //colour and style procedures will use reset, put it in both
+            if (codeCharacter == 'r') //all procedures will use reset, put it in both
             {
                 colourMap.put(codeIndex, codeCharacter);
                 styleMap.put(codeIndex, codeCharacter);
+                magicMap.put(codeIndex, codeCharacter);
             }
-            else if ((int)codeCharacter > lastColourCharLetterInt  //if codeCharacter is great than 'f', excluding 'k'
-                    && codeCharacter != 'k')                       //which will be treated under colour logic
+            else if (codeCharacter == 'k') //'k' belongs to magic function only
+            {
+                magicMap.put(codeIndex, codeCharacter);
+            }
+            else if ((int)codeCharacter > lastColourCharLetterInt) //if codeCharacter is great than 'f', it's a style
             {
                 styleMap.put(codeIndex, codeCharacter);
+                magicMap.put(codeIndex, codeCharacter);
             }
             else //it's a colour
             {
                 colourMap.put(codeIndex, codeCharacter);
+                magicMap.put(codeIndex, codeCharacter);
             }
 
             //remove code character
@@ -552,13 +560,13 @@ public class FrameChat extends JFrame
         //format the added line
         applyColour(lineStart);
         applyStyles(lineStart);
+        applyMagic(lineStart);
 
         //scroll to the end if already at the end
         if (fromEnd < 5)
         {
             textPane.setCaretPosition(chatDoc.getLength());
         }
-
     }
 
     private void applyColour(int lineStart)
@@ -652,6 +660,65 @@ public class FrameChat extends JFrame
         //clear maps for next time
         styleMap.clear();
         activeStyles.clear();
+    }
+
+    private void applyMagic(int lineStart)
+    {
+        if (!magicMap.containsValue('k')) //finish early most of the time when there is no k
+        {
+            return;
+        }
+
+        //loop through magicMap to insert colour
+        int length = 0;
+        int previousRelativeKIndex = -1, currentRelativeIndex = -1;
+        int previousAbsoluteKIndex = -1, currentAbsoluteIndex = -1;
+        char currentCodeChar = 'f';
+        boolean previousWasK = false;
+
+        for (Map.Entry<Integer, Character> entry : magicMap.entrySet())
+        {
+            currentCodeChar = entry.getValue();
+            currentRelativeIndex = entry.getKey();
+            if (currentCodeChar == 'k') //we've hit a k
+            {
+                if (previousWasK) //last was also a k, no need to change anything
+                {
+                    continue;
+                }
+                else //last was not a k, but this is. We need to set last k index to this index, then move on
+                {
+                    previousRelativeKIndex = currentRelativeIndex;
+                    previousWasK = true;
+                    continue;
+                }
+            }
+
+            //this code character is not a k, apply k formatting from last k to here if we have a previous k
+            if (previousWasK)
+            {
+                //get corresponding absolute start/end indecies within the whole document, and the colourChar
+                previousAbsoluteKIndex = lineStart + previousRelativeKIndex;
+                currentAbsoluteIndex = lineStart + currentRelativeIndex;
+
+                //get the length and colour the string
+                length = currentRelativeIndex - previousRelativeKIndex;
+                chatDoc.setCharacterAttributes(previousAbsoluteKIndex, length, codeMap.get('k'), false);
+
+                previousWasK = false;
+            }
+        }
+
+        //apply last magic if required
+        if (previousWasK)
+        {
+            currentAbsoluteIndex = lineStart + currentRelativeIndex;
+            length = chatDoc.getLength() - currentAbsoluteIndex;
+            chatDoc.setCharacterAttributes(currentAbsoluteIndex, length, codeMap.get('k'), false);
+        }
+
+        //clear magicMap for next time
+        magicMap.clear();
     }
 
     public void enableControls()
