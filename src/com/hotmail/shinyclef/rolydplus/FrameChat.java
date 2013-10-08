@@ -563,7 +563,7 @@ public class FrameChat extends JFrame
         applyMagic(lineStart);
 
         //scroll to the end if already at the end
-        if (fromEnd < 5)
+        if (fromEnd < 10)
         {
             textPane.setCaretPosition(chatDoc.getLength());
         }

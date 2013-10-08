@@ -1,6 +1,8 @@
 package com.hotmail.shinyclef.rolydplus;
 
 import javax.swing.*;
+import java.awt.*;
+import java.net.URL;
 
 /**
  * User: Shinyclef
@@ -24,6 +26,7 @@ public class FramesManager
             {
                 frameLogin = new FrameLogin();
                 frameChat = new FrameChat();
+                setFramesIcon();
             }
         });
     }
@@ -51,6 +54,13 @@ public class FramesManager
     {
         frameChat.enableControls();
         frameLogin.enableControls();
+    }
+
+    private static void setFramesIcon()
+    {
+        URL imageURL = RolyDPlus.class.getResource("/images/icon16.png");
+        frameLogin.setIconImage(Toolkit.getDefaultToolkit().getImage(imageURL));
+        frameChat.setIconImage(Toolkit.getDefaultToolkit().getImage(imageURL));
     }
 
 

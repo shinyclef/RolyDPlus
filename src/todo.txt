@@ -1,14 +1,12 @@
 Next Release:
-- new player notification
-- raffle compatibility
-- icon
+- coloured name list, correctly alphabetized
+- modreq
 
 Future:
 - link clicking
 - kick and ban messages?
 - auto name completion
 - network traffic encryption
-- coloured name list, correctly alphabetized
 - text highlights
 - sound alerts
 - task bar highlights
