@@ -1,12 +1,14 @@
 Next Release:
-- coloured name list, correctly alphabetized
-- modreq
+- back and forth login on duplicate login
+- reconnect button
+- fix 'k' again?
+- disallow /gm with no target player
 
 Future:
+- network traffic encryption
 - link clicking
 - kick and ban messages?
 - auto name completion
-- network traffic encryption
 - text highlights
 - sound alerts
 - task bar highlights

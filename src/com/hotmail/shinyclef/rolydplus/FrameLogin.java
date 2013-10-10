@@ -204,6 +204,14 @@ public class FrameLogin extends JFrame
         feedbackLabel.setVisible(true);
     }
 
+    public void updateAvailableFeedback()
+    {
+        feedbackLabel.setForeground(Color.BLUE);
+        feedbackLabel.setText("<html><center>A new version of RolyDPlus is available for download at " +
+                "www.rolyd.com/roldyplus.</center></html>");
+        feedbackLabel.setVisible(true);
+    }
+
     private void clientOutOfDateFeedback()
     {
         feedbackLabel.setForeground(Color.RED);

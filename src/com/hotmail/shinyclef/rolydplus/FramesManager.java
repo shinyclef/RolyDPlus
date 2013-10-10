@@ -15,6 +15,7 @@ public class FramesManager
     //frames
     private static FrameLogin frameLogin;
     private static FrameChat frameChat;
+    public static volatile boolean isReady = false;
 
     /* Instantiates all frames safely (avoiding concurrency problems). Does not make any visible. */
     public static void instantiateFrames()
@@ -27,6 +28,7 @@ public class FramesManager
                 frameLogin = new FrameLogin();
                 frameChat = new FrameChat();
                 setFramesIcon();
+                isReady = true;
             }
         });
     }

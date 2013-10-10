@@ -20,6 +20,7 @@ public class NetProtocol
     protected static final String MC_COMMAND_MARKER = "/";
     public static final String PING = "P";
 
+    public static final String SERVER_VERSION = CUSTOM_COMMAND_MARKER + "Ver";
     public static final String QUIT_MESSAGE = CUSTOM_COMMAND_MARKER + "Disconnect";
     public static final String LOGOUT_MESSAGE = CUSTOM_COMMAND_MARKER + "Logout";
     public static final String QUIT_MESSAGE_CLOSING = QUIT_MESSAGE + ":Closing";
@@ -106,6 +107,13 @@ public class NetProtocol
                 if (RolyDPlus.hasLoggedIn())
                 {
                     NetProtocolHelper.processStatusChange(args[1], args[2]);
+                }
+                break;
+
+            case "Ver":
+                if (!NetProtocolHelper.isUpToDate(args[1]))
+                {
+                    FramesManager.getFrameLogin().updateAvailableFeedback();
                 }
                 break;
 

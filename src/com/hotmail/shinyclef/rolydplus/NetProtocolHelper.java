@@ -21,6 +21,57 @@ public class NetProtocolHelper extends NetProtocol
     public static final String DUPLICATE = "Duplicate";
 
 
+    public static boolean isUpToDate(String serverVersion)
+    {
+        String[] verString = serverVersion.split("\\.");
+        int[] clientVer = RolyDPlus.getClientVersionParts();
+        int[] serverVer = new int[3];
+        serverVer[0] = Integer.parseInt(verString[0]);
+        serverVer[1] = Integer.parseInt(verString[1]);
+        serverVer[2] = Integer.parseInt(verString[2]);
+
+        if (serverVer[0] != clientVer[0])
+        {
+            if (serverVer[0] > clientVer[0])
+            {
+                return false;
+            }
+
+            if (serverVer[0] < clientVer[0])
+            {
+                return true;
+            }
+        }
+
+        if (serverVer[1] != clientVer[1])
+        {
+            if (serverVer[1] > clientVer[1])
+            {
+                return false;
+            }
+
+            if (serverVer[1] < clientVer[1])
+            {
+                return true;
+            }
+        }
+
+        if (serverVer[2] != clientVer[2])
+        {
+            if (serverVer[2] > clientVer[2])
+            {
+                return false;
+            }
+
+            if (serverVer[2] < clientVer[2])
+            {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
     public static void processLoginReply(String[] args)
     {
         boolean isReconnecting = RolyDPlus.hasLoggedIn();
@@ -54,7 +105,7 @@ public class NetProtocolHelper extends NetProtocol
     public static void attemptLogin(String username, String password)
     {
         //formulate login request
-        String message = "@Login:" + RolyDPlus.VERSION + ":" + username + ":" + password;
+        String message = "@Login:" + RolyDPlus.CLIENT_VERSION + ":" + username + ":" + password;
 
         //send it
         processOutput(message);
@@ -139,14 +190,9 @@ public class NetProtocolHelper extends NetProtocol
         FramesManager.getFrameChat().processFormattedOnlinePlayersList(onlinePlayerList);
     }
 
-    public static void processStatusChange(String playerName, String locationsInfo)
+    public static void processStatusChange(String playerName, String statusInfo)
     {
         //change online list
-        FramesManager.getFrameChat().processStatusChangeEvent(playerName, locationsInfo);
-    }
-
-    private static void processVisibilityChange(String playerName, String currentPresence, boolean isInvisible)
-    {
-
+        FramesManager.getFrameChat().processStatusChangeEvent(playerName, statusInfo);
     }
 }

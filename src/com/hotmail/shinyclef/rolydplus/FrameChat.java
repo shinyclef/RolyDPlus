@@ -1,5 +1,6 @@
 package com.hotmail.shinyclef.rolydplus;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -7,6 +8,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -18,16 +23,17 @@ import java.util.*;
 public class FrameChat extends JFrame
 {
     private static final String COLOUR_CHAR = String.valueOf('\u00A7');
+    private static Map<Character, Color> colourMap;
     private static Map<Character, SimpleAttributeSet> codeMap;
-    private static Map<Integer, Character> colourMap;
-    private static Map<Integer, Character> styleMap;
-    private static Map<Integer, Character> magicMap;
+    private static Map<Integer, Character> colourCharMap;
+    private static Map<Integer, Character> styleCharMap;
+    private static Map<Integer, Character> magicCharMap;
     private static Map<Integer, Character> activeStyles;
 
-    private static final int MAX_LINE_LENGTH = 150;
+    private static final int MAX_LINE_LENGTH = 200;
     private static final int MAX_LINES = 3;
     private static final Color CHAT_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .1f);
-    private static final Color LIST_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .85f);
+    private static final Color LIST_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .1f);
 
     private int currentLines = 0;
 
@@ -41,17 +47,18 @@ public class FrameChat extends JFrame
     private JTextField textField;
     private static JButton sendButton;
 
-    private Map<String, JLabel> onlinePlayers;
+    private Map<String, OnlinePlayer> onlinePlayers;
 
     private SimpleAttributeSet style1;
 
     public FrameChat()
     {
         onlinePlayers = new TreeMap<>();
-        colourMap = new LinkedHashMap<>();
-        styleMap = new LinkedHashMap<>();
-        magicMap = new LinkedHashMap<>();
+        colourCharMap = new LinkedHashMap<>();
+        styleCharMap = new LinkedHashMap<>();
+        magicCharMap = new LinkedHashMap<>();
         activeStyles = new LinkedHashMap<>();
+        setupColourMap();
         setupCodeMap();
         initializeUI();
     }
@@ -79,7 +86,7 @@ public class FrameChat extends JFrame
         JPanel topFlow = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 2));
         rightBox = new JPanel();
         rightBox.setLayout(new BoxLayout(rightBox, BoxLayout.Y_AXIS));
-        rightBox.setBorder(new EmptyBorder(new Insets(5, 5, 5, 6)));
+        rightBox.setBorder(new EmptyBorder(new Insets(5, 0, 5, 4)));
         JPanel bottomGridBag = new JPanel(new GridBagLayout());
         GridBagConstraints c;
         contentPane.add(topFlow, BorderLayout.NORTH);
@@ -147,11 +154,9 @@ public class FrameChat extends JFrame
 
         //text field listener to watch for max line length
         setupTextFieldDocumentListener();
-
-        //logoutButton.setVisible(true);
     }
 
-    class InputListener implements ActionListener
+    private class InputListener implements ActionListener
     {
         public void actionPerformed(ActionEvent e)
         {
@@ -163,6 +168,31 @@ public class FrameChat extends JFrame
             {
                 sendChatLine();
             }
+        }
+    }
+
+    private class OnlinePlayer
+    {
+        public String playerName;
+        public JLabel label;
+        public JLabel picLabel;
+        public char labelColourCode;
+        public char onlineLocations;
+        public char invisibleLocations;
+
+        OnlinePlayer(String playerName, String statusInfo)
+        {
+            this.playerName = playerName;
+            this.onlineLocations = statusInfo.charAt(0);
+            this.invisibleLocations = statusInfo.charAt(1);
+            this.labelColourCode = statusInfo.charAt(2);
+
+            String prefix = getInvisibilityPrefix(statusInfo);
+            label = new JLabel(prefix + playerName);
+            label.setForeground(colourMap.get(labelColourCode));
+
+            BufferedImage icon = getIcon(onlineLocations);
+            picLabel = new JLabel(new ImageIcon(icon));
         }
     }
 
@@ -209,26 +239,125 @@ public class FrameChat extends JFrame
             @Override
             public void changedUpdate(DocumentEvent e)
             {
-
+                //nothing needed
             }
         });
     }
 
-    public void addOrAlterPlayer(String playerName, String locationsInfo)
+    private static void setupColourMap()
     {
-        //get prefix and suffix
-        String prefix = getInvisibilityPrefix(locationsInfo);
-        String suffix = getOnlineSuffix(locationsInfo);
+        colourMap = new HashMap<>();
+        colourMap.put('0', Color.getHSBColor(0, 0, 0));           //black
+        colourMap.put('1', Color.getHSBColor(.666666f, 1, .67f)); //dark-blue
+        colourMap.put('2', Color.getHSBColor(.333333f, 1, .67f)); //dark-green
+        colourMap.put('3', Color.getHSBColor(.5f, 1, .67f));      //dark-aqua
+        colourMap.put('4', Color.getHSBColor(0, 1, .67f));        //dark-red
+        colourMap.put('5', Color.getHSBColor(.833333f, 1, .67f)); //dark-purple
+        colourMap.put('6', Color.getHSBColor(.111111f, 1, 1));    //gold
+        colourMap.put('7', Color.getHSBColor(0, 0, .67f));        //gray
+        colourMap.put('8', Color.getHSBColor(.236111f, 0, .33f)); //dark-gray
+        colourMap.put('9', Color.getHSBColor(.666666f, .67f, 1)); //blue
+        colourMap.put('a', Color.getHSBColor(.333333f, .67f, 1)); //green
+        colourMap.put('b', Color.getHSBColor(.5f, .67f, 1));      //aqua
+        colourMap.put('c', Color.getHSBColor(0, .67f, 1));        //red
+        colourMap.put('d', Color.getHSBColor(.833333f, .67f, 1)); //light-purple
+        colourMap.put('e', Color.getHSBColor(.166666f, .67f, 1)); //yellow
+        colourMap.put('f', Color.getHSBColor(0, 0, 1));           //white
+    }
 
-        //add player to online list and redraw
-        onlinePlayers.put(playerName, new JLabel(prefix + playerName + suffix));
+    private static void setupCodeMap()
+    {
+        //instantiate the attribute sets
+        SimpleAttributeSet s0 = new SimpleAttributeSet(); //black
+        SimpleAttributeSet s1 = new SimpleAttributeSet(); //dark-blue
+        SimpleAttributeSet s2 = new SimpleAttributeSet(); //dark-green
+        SimpleAttributeSet s3 = new SimpleAttributeSet(); //dark-aqua
+        SimpleAttributeSet s4 = new SimpleAttributeSet(); //dark-red
+        SimpleAttributeSet s5 = new SimpleAttributeSet(); //dark-purple
+        SimpleAttributeSet s6 = new SimpleAttributeSet(); //gold
+        SimpleAttributeSet s7 = new SimpleAttributeSet(); //gray
+        SimpleAttributeSet s8 = new SimpleAttributeSet(); //dark-gray
+        SimpleAttributeSet s9 = new SimpleAttributeSet(); //blue
+        SimpleAttributeSet sa = new SimpleAttributeSet(); //green
+        SimpleAttributeSet sb = new SimpleAttributeSet(); //aqua
+        SimpleAttributeSet sc = new SimpleAttributeSet(); //red
+        SimpleAttributeSet sd = new SimpleAttributeSet(); //light-purple
+        SimpleAttributeSet se = new SimpleAttributeSet(); //yellow
+        SimpleAttributeSet sf = new SimpleAttributeSet(); //white
+        SimpleAttributeSet sr = new SimpleAttributeSet(); //reset
+        SimpleAttributeSet sk = new SimpleAttributeSet(); //magic (obfuscation, randomly changing)
+        SimpleAttributeSet sl = new SimpleAttributeSet(); //bold
+        SimpleAttributeSet sm = new SimpleAttributeSet(); //strike-through
+        SimpleAttributeSet sn = new SimpleAttributeSet(); //underline
+        SimpleAttributeSet so = new SimpleAttributeSet(); //italic
+
+        //assign mc colours to the attributes sets
+        StyleConstants.setForeground(s0, colourMap.get('0')); //black
+        StyleConstants.setForeground(s1, colourMap.get('1')); //dark-blue
+        StyleConstants.setForeground(s2, colourMap.get('2')); //dark-green
+        StyleConstants.setForeground(s3, colourMap.get('3')); //dark-aqua
+        StyleConstants.setForeground(s4, colourMap.get('4')); //dark-red
+        StyleConstants.setForeground(s5, colourMap.get('5')); //dark-purple
+        StyleConstants.setForeground(s6, colourMap.get('6')); //gold
+        StyleConstants.setForeground(s7, colourMap.get('7')); //gray
+        StyleConstants.setForeground(s8, colourMap.get('8')); //dark-gray
+        StyleConstants.setForeground(s9, colourMap.get('9')); //blue
+        StyleConstants.setForeground(sa, colourMap.get('a')); //green
+        StyleConstants.setForeground(sb, colourMap.get('b')); //aqua
+        StyleConstants.setForeground(sc, colourMap.get('c')); //red
+        StyleConstants.setForeground(sd, colourMap.get('d')); //light-purple
+        StyleConstants.setForeground(se, colourMap.get('e')); //yellow
+        StyleConstants.setForeground(sf, colourMap.get('f')); //white
+        StyleConstants.setForeground(sk, Color.DARK_GRAY);  //magic
+        StyleConstants.setBackground(sk, Color.DARK_GRAY);  //magic
+        StyleConstants.setBold(sl, true);                   //bold
+        StyleConstants.setStrikeThrough(sm, true);          //strike-through
+        StyleConstants.setUnderline(sn, true);              //underline
+        StyleConstants.setItalic(so, true);                 //italic
+        //reset
+        StyleConstants.setForeground(sr, Color.getHSBColor(0, 0, 1)); //reset to white
+        StyleConstants.setBold(sr, false);          //reset bold
+        StyleConstants.setStrikeThrough(sr, false); //reset strike-through
+        StyleConstants.setUnderline(sr, false);     //reset underline
+        StyleConstants.setItalic(sr, false);        //reset italic
+
+        //put the attribute sets into the colour map
+        codeMap = new HashMap<>();
+        codeMap.put('0', s0);
+        codeMap.put('1', s1);
+        codeMap.put('2', s2);
+        codeMap.put('3', s3);
+        codeMap.put('4', s4);
+        codeMap.put('5', s5);
+        codeMap.put('6', s6);
+        codeMap.put('7', s7);
+        codeMap.put('8', s8);
+        codeMap.put('9', s9);
+        codeMap.put('a', sa);
+        codeMap.put('b', sb);
+        codeMap.put('c', sc);
+        codeMap.put('d', sd);
+        codeMap.put('e', se);
+        codeMap.put('f', sf);
+        codeMap.put('k', sk);
+        codeMap.put('l', sl);
+        codeMap.put('m', sm);
+        codeMap.put('n', sn);
+        codeMap.put('o', so);
+        codeMap.put('r', sr);
+    }
+
+    public void addOrAlterPlayer(String playerName, String statusInfo)
+    {
+        //add player to list and redraw
+        onlinePlayers.put(playerName.toLowerCase(), new OnlinePlayer(playerName, statusInfo));
         redrawList();
     }
 
     public void removePlayer(String playerName)
     {
         //remove player from online list and redraw
-        onlinePlayers.remove(playerName);
+        onlinePlayers.remove(playerName.toLowerCase());
         redrawList();
     }
 
@@ -236,18 +365,71 @@ public class FrameChat extends JFrame
     private void redrawList()
     {
         rightBox.removeAll();
-        for (JLabel label : onlinePlayers.values())
+        for (OnlinePlayer listing : onlinePlayers.values())
         {
-            rightBox.add(label);
+            JPanel listingContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            listingContainer.setBackground(LIST_BACKGROUND_COLOR);
+            listingContainer.setMaximumSize(new Dimension(Short.MAX_VALUE, 15));
+
+            //add the image and name labels to the container
+            listingContainer.add(listing.picLabel);
+            listingContainer.add(listing.label);
+
+            //add the container to player list box
+            rightBox.add(listingContainer);
         }
 
-        for (JLabel label : onlinePlayers.values())
+        for (OnlinePlayer listing : onlinePlayers.values())
         {
-            label.revalidate();
+            listing.label.revalidate();
         }
 
         revalidate();
         repaint();
+    }
+
+    private BufferedImage getIcon(char onlineLocationsChar)
+    {
+        String iconFileName;
+        switch (onlineLocationsChar)
+        {
+            case 'S':
+                iconFileName = "onlineserver.png";
+                break;
+
+            case 'C':
+                iconFileName = "onlineclient.png";
+                break;
+
+            case 'B':
+                iconFileName = "onlineboth.png";
+                break;
+
+            default:
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("Warning! Default case triggered in FrameChat.getIcon with char: " +
+                            onlineLocationsChar);
+                }
+                return null;
+        }
+
+        URL imageURL = RolyDPlus.class.getResource("/images/" + iconFileName);
+        BufferedImage icon;
+        try
+        {
+            icon = ImageIO.read(imageURL);
+        }
+        catch (IOException e)
+        {
+            if (RolyDPlus.DEV_BUILD)
+            {
+                System.out.println("Warning! IOException in FrameChat.getIcon with path: " + imageURL);
+            }
+            return null;
+        }
+
+        return icon;
     }
 
     public void processFormattedOnlinePlayersList(String formattedListString)
@@ -259,37 +441,32 @@ public class FrameChat extends JFrame
         {
             /* 'S' server, 'C' client, 'B' both, 'N' none (should never happen)
             * first char upper case for online locations, second char lower case for invisible locations
+            * third char is colour char.
             * '.' to separate special chars with name
             * eg. Ss.johnny, sammy, Cn.shiny, Ns:david */
 
-            String locationsInfo = listItem.substring(0, listItem.indexOf("."));
-            String name = listItem.substring(listItem.indexOf(".") + 1);
+            String statusInfo = listItem.substring(0, listItem.indexOf("."));
+            String playerName = listItem.substring(listItem.indexOf(".") + 1);
 
-            char onlineLocations = locationsInfo.charAt(0);
-            char invisibleLocations = locationsInfo.charAt(1);
-
-            String prefix = getInvisibilityPrefix(locationsInfo);
-            String suffix = getOnlineSuffix(locationsInfo);
-
-            if (canSeeThisPlayer(locationsInfo))
+            if (canSeeThisPlayer(statusInfo))
             {
-                onlinePlayers.put(name, new JLabel(prefix + name + suffix));
+                onlinePlayers.put(playerName.toLowerCase(), new OnlinePlayer(playerName, statusInfo));
             }
         }
         redrawList();
     }
 
     //handles the online list, not the chat notification
-    public void processStatusChangeEvent(String playerName, String locationsInfo)
+    public void processStatusChangeEvent(String playerName, String statusInfo)
     {
         //user has logged out of everything
-        if (!canSeeThisPlayer(locationsInfo))
+        if (!canSeeThisPlayer(statusInfo))
         {
             removePlayer(playerName);
         }
         else
         {
-            addOrAlterPlayer(playerName, locationsInfo);
+            addOrAlterPlayer(playerName, statusInfo);
         }
     }
 
@@ -386,88 +563,6 @@ public class FrameChat extends JFrame
         return false;
     }
 
-    private static void setupCodeMap()
-    {
-        //instantiate the attribute sets
-        SimpleAttributeSet s0 = new SimpleAttributeSet(); //black
-        SimpleAttributeSet s1 = new SimpleAttributeSet(); //dark-blue
-        SimpleAttributeSet s2 = new SimpleAttributeSet(); //dark-green
-        SimpleAttributeSet s3 = new SimpleAttributeSet(); //dark-aqua
-        SimpleAttributeSet s4 = new SimpleAttributeSet(); //dark-red
-        SimpleAttributeSet s5 = new SimpleAttributeSet(); //dark-purple
-        SimpleAttributeSet s6 = new SimpleAttributeSet(); //gold
-        SimpleAttributeSet s7 = new SimpleAttributeSet(); //gray
-        SimpleAttributeSet s8 = new SimpleAttributeSet(); //dark-gray
-        SimpleAttributeSet s9 = new SimpleAttributeSet(); //blue
-        SimpleAttributeSet sa = new SimpleAttributeSet(); //green
-        SimpleAttributeSet sb = new SimpleAttributeSet(); //aqua
-        SimpleAttributeSet sc = new SimpleAttributeSet(); //red
-        SimpleAttributeSet sd = new SimpleAttributeSet(); //light-purple
-        SimpleAttributeSet se = new SimpleAttributeSet(); //yellow
-        SimpleAttributeSet sf = new SimpleAttributeSet(); //white
-        SimpleAttributeSet sr = new SimpleAttributeSet(); //reset
-        SimpleAttributeSet sk = new SimpleAttributeSet(); //magic (obfuscation, randomly changing)
-        SimpleAttributeSet sl = new SimpleAttributeSet(); //bold
-        SimpleAttributeSet sm = new SimpleAttributeSet(); //strike-through
-        SimpleAttributeSet sn = new SimpleAttributeSet(); //underline
-        SimpleAttributeSet so = new SimpleAttributeSet(); //italic
-
-        //assign mc colours to the attributes sets
-        StyleConstants.setForeground(s0, Color.getHSBColor(0, 0, 0));           //black
-        StyleConstants.setForeground(s1, Color.getHSBColor(.666666f, 1, .67f)); //dark-blue
-        StyleConstants.setForeground(s2, Color.getHSBColor(.333333f, 1, .67f)); //dark-green
-        StyleConstants.setForeground(s3, Color.getHSBColor(.5f, 1, .67f));      //dark-aqua
-        StyleConstants.setForeground(s4, Color.getHSBColor(0, 1, .67f));        //dark-red
-        StyleConstants.setForeground(s5, Color.getHSBColor(.833333f, 1, .67f)); //dark-purple
-        StyleConstants.setForeground(s6, Color.getHSBColor(.111111f, 1, 1));    //gold
-        StyleConstants.setForeground(s7, Color.getHSBColor(0, 0, .67f));        //gray
-        StyleConstants.setForeground(s8, Color.getHSBColor(.236111f, 0, .33f)); //dark-gray
-        StyleConstants.setForeground(s9, Color.getHSBColor(.666666f, .67f, 1)); //blue
-        StyleConstants.setForeground(sa, Color.getHSBColor(.333333f, .67f, 1)); //green
-        StyleConstants.setForeground(sb, Color.getHSBColor(.5f, .67f, 1));      //aqua
-        StyleConstants.setForeground(sc, Color.getHSBColor(0, .67f, 1));        //red
-        StyleConstants.setForeground(sd, Color.getHSBColor(.833333f, .67f, 1)); //light-purple
-        StyleConstants.setForeground(se, Color.getHSBColor(.166666f, .67f, 1)); //yellow
-        StyleConstants.setForeground(sf, Color.getHSBColor(0, 0, 1));           //white
-        StyleConstants.setForeground(sk, Color.DARK_GRAY);  //magic
-        StyleConstants.setBackground(sk, Color.DARK_GRAY);  //magic
-        StyleConstants.setBold(sl, true);                   //bold
-        StyleConstants.setStrikeThrough(sm, true);          //strike-through
-        StyleConstants.setUnderline(sn, true);              //underline
-        StyleConstants.setItalic(so, true);                 //italic
-        //reset
-        StyleConstants.setForeground(sr, Color.getHSBColor(0, 0, 1)); //reset to white
-        StyleConstants.setBold(sr, false);          //reset bold
-        StyleConstants.setStrikeThrough(sr, false); //reset strike-through
-        StyleConstants.setUnderline(sr, false);     //reset underline
-        StyleConstants.setItalic(sr, false);        //reset italic
-
-        //put the attribute sets into the colour map
-        codeMap = new HashMap<>();
-        codeMap.put('0', s0);
-        codeMap.put('1', s1);
-        codeMap.put('2', s2);
-        codeMap.put('3', s3);
-        codeMap.put('4', s4);
-        codeMap.put('5', s5);
-        codeMap.put('6', s6);
-        codeMap.put('7', s7);
-        codeMap.put('8', s8);
-        codeMap.put('9', s9);
-        codeMap.put('a', sa);
-        codeMap.put('b', sb);
-        codeMap.put('c', sc);
-        codeMap.put('d', sd);
-        codeMap.put('e', se);
-        codeMap.put('f', sf);
-        codeMap.put('k', sk);
-        codeMap.put('l', sl);
-        codeMap.put('m', sm);
-        codeMap.put('n', sn);
-        codeMap.put('o', so);
-        codeMap.put('r', sr);
-    }
-
     /* Handles all the steps that happen when a chat line is sent. */
     private void sendChatLine()
     {
@@ -503,7 +598,7 @@ public class FrameChat extends JFrame
         final int lastColourCharLetterInt = (int)'f';
         final int fromEnd = vScrollBar.getMaximum() - (vScrollBar.getValue() + vScrollBar.getModel().getExtent());
 
-        //move codes with their indecies from string to colourMap and styleMap
+        //move codes with their indecies from string to colourCharMap and styleCharMap
         while (line.contains(COLOUR_CHAR))
         {
             //get index and colour of first colour code
@@ -518,23 +613,23 @@ public class FrameChat extends JFrame
             //put it in the appropriate map/s
             if (codeCharacter == 'r') //all procedures will use reset, put it in both
             {
-                colourMap.put(codeIndex, codeCharacter);
-                styleMap.put(codeIndex, codeCharacter);
-                magicMap.put(codeIndex, codeCharacter);
+                colourCharMap.put(codeIndex, codeCharacter);
+                styleCharMap.put(codeIndex, codeCharacter);
+                magicCharMap.put(codeIndex, codeCharacter);
             }
             else if (codeCharacter == 'k') //'k' belongs to magic function only
             {
-                magicMap.put(codeIndex, codeCharacter);
+                magicCharMap.put(codeIndex, codeCharacter);
             }
             else if ((int)codeCharacter > lastColourCharLetterInt) //if codeCharacter is great than 'f', it's a style
             {
-                styleMap.put(codeIndex, codeCharacter);
-                magicMap.put(codeIndex, codeCharacter);
+                styleCharMap.put(codeIndex, codeCharacter);
+                magicCharMap.put(codeIndex, codeCharacter);
             }
             else //it's a colour
             {
-                colourMap.put(codeIndex, codeCharacter);
-                magicMap.put(codeIndex, codeCharacter);
+                colourCharMap.put(codeIndex, codeCharacter);
+                magicCharMap.put(codeIndex, codeCharacter);
             }
 
             //remove code character
@@ -571,12 +666,12 @@ public class FrameChat extends JFrame
 
     private void applyColour(int lineStart)
     {
-        //loop through colourMap to insert colour
+        //loop through colourCharMap to insert colour
         int length = 0;
         int previousRelativeIndex, currentRelativeIndex = -1;
         int previousAbsoluteIndex, currentAbsoluteIndex = -1;
         char previousColourChar, currentColourChar = 'f';
-        for (Map.Entry<Integer, Character> entry : colourMap.entrySet())
+        for (Map.Entry<Integer, Character> entry : colourCharMap.entrySet())
         {
             //update indecies and colours
             previousRelativeIndex = currentRelativeIndex;
@@ -606,17 +701,17 @@ public class FrameChat extends JFrame
         length = chatDoc.getLength() - currentAbsoluteIndex;
         chatDoc.setCharacterAttributes(currentAbsoluteIndex, length, codeMap.get(currentColourChar), false);
 
-        //clear colourMap for next time
-        colourMap.clear();
+        //clear colourCharMap for next time
+        colourCharMap.clear();
     }
 
     private  void applyStyles(int lineStart)
     {
-        //loop through styleMap to insert style
+        //loop through styleCharMap to insert style
         int currentIndex;
 
         //let's go through the style map
-        for (Map.Entry<Integer, Character> entry : styleMap.entrySet())
+        for (Map.Entry<Integer, Character> entry : styleCharMap.entrySet())
         {
             //make a record of all styles to write before we reach a reset, or the end of line
             if (entry.getValue() != 'r' && entry.getValue() != 'R')
@@ -658,25 +753,25 @@ public class FrameChat extends JFrame
         }
 
         //clear maps for next time
-        styleMap.clear();
+        styleCharMap.clear();
         activeStyles.clear();
     }
 
     private void applyMagic(int lineStart)
     {
-        if (!magicMap.containsValue('k')) //finish early most of the time when there is no k
+        if (!magicCharMap.containsValue('k')) //finish early most of the time when there is no k
         {
             return;
         }
 
-        //loop through magicMap to insert colour
+        //loop through magicCharMap to insert colour
         int length = 0;
         int previousRelativeKIndex = -1, currentRelativeIndex = -1;
         int previousAbsoluteKIndex = -1, currentAbsoluteIndex = -1;
         char currentCodeChar = 'f';
         boolean previousWasK = false;
 
-        for (Map.Entry<Integer, Character> entry : magicMap.entrySet())
+        for (Map.Entry<Integer, Character> entry : magicCharMap.entrySet())
         {
             currentCodeChar = entry.getValue();
             currentRelativeIndex = entry.getKey();
@@ -717,8 +812,8 @@ public class FrameChat extends JFrame
             chatDoc.setCharacterAttributes(currentAbsoluteIndex, length, codeMap.get('k'), false);
         }
 
-        //clear magicMap for next time
-        magicMap.clear();
+        //clear magicCharMap for next time
+        magicCharMap.clear();
     }
 
     public void enableControls()

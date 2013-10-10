@@ -14,8 +14,9 @@ import java.net.UnknownHostException;
 public class RolyDPlus
 {
     public static final boolean DEV_BUILD = false;
-    public static final boolean LOCAL_SERVER = true;
-    public static final String VERSION = "1.0.5";
+    public static final boolean LOCAL_SERVER = false;
+    public static final String CLIENT_VERSION = "1.1.0";
+    private static int[] clientVersionParts;
     private static boolean isConnected = false;
     private static boolean hasLoggedIn = false;
 
@@ -39,6 +40,12 @@ public class RolyDPlus
 
     public static void main(String[] args)
     {
+        clientVersionParts = new int[3];
+        String[] versionStrings = CLIENT_VERSION.split("\\.");
+        clientVersionParts[0] = Integer.parseInt(versionStrings[0]);
+        clientVersionParts[1] = Integer.parseInt(versionStrings[1]);
+        clientVersionParts[2] = Integer.parseInt(versionStrings[2]);
+
         try
         {
             setupConnection();
@@ -67,6 +74,7 @@ public class RolyDPlus
 
         FramesManager.instantiateFrames();
         FramesManager.showFirstFrame();
+        onStartup();
     }
 
     private static void setupConnection() throws IOException
@@ -99,6 +107,26 @@ public class RolyDPlus
 
         //set connected state
         isConnected = true;
+    }
+
+    private static void onStartup()
+    {
+        while (!FramesManager.isReady)
+        {
+            try
+            {
+                Thread.sleep(200);
+            }
+            catch(InterruptedException e)
+            {
+                if (RolyDPlus.DEV_BUILD)
+                {
+                    System.out.println("Warning! Thread interrupted in RolyDPlus.onStartup.");
+                    return;
+                }
+            }
+        }
+        NetProtocol.processOutput(NetProtocol.SERVER_VERSION);
     }
 
     public static void initializeExit(int code)
@@ -230,6 +258,11 @@ public class RolyDPlus
     }
 
     /* Getters */
+
+    public static int[] getClientVersionParts()
+    {
+        return clientVersionParts;
+    }
 
     public static Thread getPinger()
     {
