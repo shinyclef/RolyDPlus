@@ -44,6 +44,7 @@ public class FrameChat extends JFrame
     private StyledDocument chatDoc;
     private JScrollPane listScrollPane;
 
+    private JButton reconnectButton;
     private JTextField textField;
     private static JButton sendButton;
 
@@ -83,7 +84,7 @@ public class FrameChat extends JFrame
         contentPane = getContentPane();
 
         //some containers for layout
-        JPanel topFlow = new JPanel(new FlowLayout(FlowLayout.TRAILING, 5, 2));
+        JPanel topFlow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 2));
         rightBox = new JPanel();
         rightBox.setLayout(new BoxLayout(rightBox, BoxLayout.Y_AXIS));
         rightBox.setBorder(new EmptyBorder(new Insets(5, 0, 5, 4)));
@@ -98,6 +99,7 @@ public class FrameChat extends JFrame
         JScrollPane chatScrollPane = new JScrollPane(textPane);
         listScrollPane = new JScrollPane(rightBox);
         vScrollBar = chatScrollPane.getVerticalScrollBar();
+        reconnectButton = new JButton("Reconnect");
         textField = new JTextField();
         chatDoc = textPane.getStyledDocument();
         JButton logoutButton = new JButton("Logout");
@@ -106,6 +108,7 @@ public class FrameChat extends JFrame
         //add the components to the panels
         contentPane.add(chatScrollPane, BorderLayout.CENTER);
         contentPane.add(listScrollPane, BorderLayout.EAST);
+        topFlow.add(reconnectButton);
         topFlow.add(logoutButton);
 
         //set some properties
@@ -114,6 +117,9 @@ public class FrameChat extends JFrame
         rightBox.setBackground(LIST_BACKGROUND_COLOR);
         Font buttonFont = new Font("Arial", 1, 10);
         sendButton.setFont(buttonFont);
+        reconnectButton.setFont(buttonFont);
+        reconnectButton.setPreferredSize(new Dimension(86, 15));
+        reconnectButton.setVisible(false);
         logoutButton.setFont(buttonFont);
         sendButton.setPreferredSize(new Dimension(60, 24));
         logoutButton.setPreferredSize(new Dimension(68, 15));
@@ -150,6 +156,7 @@ public class FrameChat extends JFrame
         //add the listeners
         textField.addActionListener(listener);
         sendButton.addActionListener(listener);
+        reconnectButton.addActionListener(listener);
         logoutButton.addActionListener(listener);
 
         //text field listener to watch for max line length
@@ -160,11 +167,16 @@ public class FrameChat extends JFrame
     {
         public void actionPerformed(ActionEvent e)
         {
-            if (e.getActionCommand().equals("Logout"))
+            String button = e.getActionCommand();
+            if (button.equals("Logout"))
             {
                 logout();
             }
-            else
+            else if(button.equals("Reconnect"))
+            {
+                RolyDPlus.reconnect(0);
+            }
+            else //handles send button and text field
             {
                 sendChatLine();
             }
@@ -191,7 +203,7 @@ public class FrameChat extends JFrame
             label = new JLabel(prefix + playerName);
             label.setForeground(colourMap.get(labelColourCode));
 
-            BufferedImage icon = getIcon(onlineLocations);
+            BufferedImage icon = getIcon(getVisibleOnlineStatus(statusInfo));
             picLabel = new JLabel(new ImageIcon(icon));
         }
     }
@@ -411,7 +423,8 @@ public class FrameChat extends JFrame
                     System.out.println("Warning! Default case triggered in FrameChat.getIcon with char: " +
                             onlineLocationsChar);
                 }
-                return null;
+                iconFileName = "onlineserver.png";
+                break;
         }
 
         URL imageURL = RolyDPlus.class.getResource("/images/" + iconFileName);
@@ -478,11 +491,11 @@ public class FrameChat extends JFrame
         //get invisibility prefix for mods
         if (RolyDPlus.isMod())
         {
-            if (onlineLocations == 'S' && invisibleLocations == 's')
+            if (onlineLocations == 'S' && (invisibleLocations == 's' || invisibleLocations == 'b'))
             {
                 return "(s)";
             }
-            else if (onlineLocations == 'C' && invisibleLocations == 'c')
+            else if (onlineLocations == 'C' && (invisibleLocations == 'c' || invisibleLocations == 'b'))
             {
                 return "(c)";
             }
@@ -498,42 +511,43 @@ public class FrameChat extends JFrame
         return "";
     }
 
-    private String getOnlineSuffix(String locationsInfo)
+    private char getVisibleOnlineStatus(String statusInfo)
     {
-        char onlineLocations = locationsInfo.charAt(0);
-        char invisibleLocations = locationsInfo.charAt(1);
+        char onlineLocations = statusInfo.charAt(0);
+        char invisibleLocations = statusInfo.charAt(1);
 
         //get online locations for mods
         if (RolyDPlus.isMod())
         {
-            if (onlineLocations == 'B')
-            {
-                return "(+)";
-            }
-            else if (onlineLocations == 'C')
-            {
-                return "(-)";
-            }
+            return onlineLocations;
         }
-        else //online location for everyone
+        else //online location as seen by non-mods
         {
+            if (onlineLocations == 'S' && invisibleLocations != 's' && invisibleLocations != 'b')
+            {
+                return 'S';
+            }
+            else if (onlineLocations == 'C' && invisibleLocations != 'c' && invisibleLocations != 'b')
+            {
+                return 'C';
+            }
             if (onlineLocations == 'B')
             {
                 if (invisibleLocations == 'n')
                 {
-                    return "(+)";
+                    return 'B';
                 }
-                if (invisibleLocations == 's')
+                else if (invisibleLocations == 's')
                 {
-                    return "(-)";
+                    return 'C';
                 }
-            }
-            else if (onlineLocations == 'C' && invisibleLocations != 'c' && invisibleLocations != 'b')
-            {
-                return "(-)";
+                else if (invisibleLocations == 'c')
+                {
+                    return 'S';
+                }
             }
         }
-        return "";
+        return 'N';
     }
 
     private boolean canSeeThisPlayer(String locationsInfo)
@@ -816,16 +830,18 @@ public class FrameChat extends JFrame
         magicCharMap.clear();
     }
 
-    public void enableControls()
+    public void enableServerInteraction()
     {
         textField.setEnabled(true);
         sendButton.setEnabled(true);
+        reconnectButton.setVisible(false);
     }
 
-    public void disableControls()
+    public void disableServerInteraction()
     {
         textField.setEnabled(false);
         sendButton.setEnabled(false);
+        reconnectButton.setVisible(true);
     }
 
     public void showFrame()

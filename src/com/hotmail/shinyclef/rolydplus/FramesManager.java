@@ -48,13 +48,13 @@ public class FramesManager
 
     public static void disableServerInteraction()
     {
-        frameChat.disableControls();
+        frameChat.disableServerInteraction();
         frameLogin.disableControls();
     }
 
     public static void enableServerInteraction()
     {
-        frameChat.enableControls();
+        frameChat.enableServerInteraction();
         frameLogin.enableControls();
     }
 

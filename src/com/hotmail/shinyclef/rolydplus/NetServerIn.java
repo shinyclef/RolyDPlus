@@ -61,7 +61,7 @@ public class NetServerIn implements Runnable
             }
         }
 
-        NetProtocol.processDisconnect("Connection lost.", 10);
+        NetProtocol.processDisconnect("Connection lost.", -1);
         if (RolyDPlus.DEV_BUILD)
         {
             System.out.println("NetServerIn closing (End of class).");

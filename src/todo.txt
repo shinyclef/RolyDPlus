@@ -1,6 +1,4 @@
 Next Release:
-- back and forth login on duplicate login
-- reconnect button
 - fix 'k' again?
 - disallow /gm with no target player
 

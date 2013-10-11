@@ -15,7 +15,7 @@ public class RolyDPlus
 {
     public static final boolean DEV_BUILD = false;
     public static final boolean LOCAL_SERVER = false;
-    public static final String CLIENT_VERSION = "1.1.0";
+    public static final String CLIENT_VERSION = "1.1.1";
     private static int[] clientVersionParts;
     private static boolean isConnected = false;
     private static boolean hasLoggedIn = false;
@@ -207,9 +207,6 @@ public class RolyDPlus
 
     public static void reconnect(int secondDelay)
     {
-        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
-                "Attempting to reconnect in " + secondDelay + " seconds.");
-
         //wait for the specified delay time
         try
         {
@@ -224,31 +221,40 @@ public class RolyDPlus
         closeSocket();
 
         //setup a new connection
-        FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "Reconnecting...");
+        if (hasLoggedIn())
+        {
+            FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK + "Reconnecting...");
+        }
+
         try
         {
             setupConnection();
         }
         catch (IOException e)
         {
-            FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
-                    "Connection failed. Please try again later.");
+            if (hasLoggedIn())
+            {
+                FramesManager.getFrameChat().writeColouredLine(NetProtocol.PINK +
+                        "Connection failed. Please try again later.");
+            }
+            else
+            {
+                FramesManager.getFrameLogin().reconnectUnsuccessfulFeedback();
+            }
             return;
         }
-
-        //wait a bit before logging in
-        try
-        {
-            Thread.sleep(1500);
-        }
-        catch (InterruptedException e)
-        {
-
-        }
-
         //log back in if appropriate, or re-enable login frame controls
         if (hasLoggedIn())
         {
+            //wait a bit before logging in
+            try
+            {
+                Thread.sleep(1500);
+            }
+            catch (InterruptedException e)
+            {
+
+            }
             NetProtocolHelper.attemptLogin(username, password);
         }
         else
