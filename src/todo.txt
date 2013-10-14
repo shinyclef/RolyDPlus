@@ -1,12 +1,11 @@
 Next Release:
-- fix 'k' again?
-- disallow /gm with no target player
+- auto name completion
 
 Future:
+- fix 'k' again?
 - network traffic encryption
 - link clicking
 - kick and ban messages?
-- auto name completion
 - text highlights
 - sound alerts
 - task bar highlights

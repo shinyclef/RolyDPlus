@@ -9,10 +9,10 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 
 /**
  * User: Shinyclef
@@ -29,12 +29,15 @@ public class FrameChat extends JFrame
     private static Map<Integer, Character> styleCharMap;
     private static Map<Integer, Character> magicCharMap;
     private static Map<Integer, Character> activeStyles;
+    private static List<String> messageHistory;
 
+    private static final int MESSAGE_HISTORY_LENGTH = 20;
     private static final int MAX_LINE_LENGTH = 200;
     private static final int MAX_LINES = 3;
     private static final Color CHAT_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .1f);
     private static final Color LIST_BACKGROUND_COLOR = Color.getHSBColor(0, 0, .1f);
 
+    private int nextMessageHistoryIndex = 0;
     private int currentLines = 0;
 
     private Container contentPane;
@@ -59,6 +62,7 @@ public class FrameChat extends JFrame
         styleCharMap = new LinkedHashMap<>();
         magicCharMap = new LinkedHashMap<>();
         activeStyles = new LinkedHashMap<>();
+        messageHistory = new LinkedList<>();
         setupColourMap();
         setupCodeMap();
         initializeUI();
@@ -152,9 +156,11 @@ public class FrameChat extends JFrame
 
         //the listeners
         ActionListener listener = new InputListener();
+        MyKeyListener myKeyListener = new MyKeyListener();
 
         //add the listeners
         textField.addActionListener(listener);
+        textField.addKeyListener(myKeyListener);
         sendButton.addActionListener(listener);
         reconnectButton.addActionListener(listener);
         logoutButton.addActionListener(listener);
@@ -180,6 +186,28 @@ public class FrameChat extends JFrame
             {
                 sendChatLine();
             }
+        }
+    }
+
+    class MyKeyListener implements KeyListener
+    {
+        @Override
+        public void keyTyped(KeyEvent e)
+        {
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e)
+        {
+            if (e.getKeyCode() == 38)
+            {
+                cycleMessageHistory();
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e)
+        {
         }
     }
 
@@ -586,6 +614,7 @@ public class FrameChat extends JFrame
             return;
         }
 
+        addToMessageHistory(line);
         networkOutput(line);
         textField.setText("");
         textField.requestFocusInWindow();
@@ -676,6 +705,41 @@ public class FrameChat extends JFrame
         {
             textPane.setCaretPosition(chatDoc.getLength());
         }
+    }
+
+    private void cycleMessageHistory()
+    {
+        if (messageHistory.isEmpty())
+        {
+            return;
+        }
+
+        textField.setText(messageHistory.get(nextMessageHistoryIndex));
+        nextMessageHistoryIndex--;
+        if (nextMessageHistoryIndex < 0)
+        {
+            nextMessageHistoryIndex = messageHistory.size() - 1;
+        }
+    }
+
+    private void addToMessageHistory(String line)
+    {
+        if (messageHistory.contains(line))
+        {
+            messageHistory.remove(line);
+        }
+        else
+        {
+            if (!messageHistory.isEmpty() && messageHistory.size() >= MESSAGE_HISTORY_LENGTH)
+            {
+                messageHistory.remove(0);
+            }
+        }
+
+        messageHistory.add(line);
+
+        //reset the message history index
+        nextMessageHistoryIndex = messageHistory.size() - 1;
     }
 
     private void applyColour(int lineStart)
@@ -951,4 +1015,13 @@ public class FrameChat extends JFrame
             }
         }
     }
+
+    private void test()
+    {
+        for (String s : messageHistory)
+        {
+            System.out.println(s);
+        }
+    }
+
 }

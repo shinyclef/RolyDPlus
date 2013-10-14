@@ -14,7 +14,7 @@ import java.net.UnknownHostException;
 public class RolyDPlus
 {
     public static final boolean DEV_BUILD = false;
-    public static final boolean LOCAL_SERVER = false;
+    public static final boolean LOCAL_SERVER = true;
     public static final String CLIENT_VERSION = "1.1.1";
     private static int[] clientVersionParts;
     private static boolean isConnected = false;
