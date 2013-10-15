@@ -40,6 +40,13 @@ public class FrameChat extends JFrame
     private int nextMessageHistoryIndex = 0;
     private int currentLines = 0;
 
+    /* tab auto name completion variables */
+    private boolean nameCompletionMode = false;
+    private int nameListIndex = 0;
+    private String incompleteName;
+    private String preName, postName;
+    private List<String> nameMatchList;
+
     private Container contentPane;
     private JPanel rightBox;
     private JTextPane textPane;
@@ -118,6 +125,7 @@ public class FrameChat extends JFrame
         //set some properties
         textField.setPreferredSize(new Dimension(0, 25));
         textPane.setBackground(CHAT_BACKGROUND_COLOR);
+        textField.setFocusTraversalKeysEnabled(false); //tab doesn't leave field and is caught by key listener
         rightBox.setBackground(LIST_BACKGROUND_COLOR);
         Font buttonFont = new Font("Arial", 1, 10);
         sendButton.setFont(buttonFont);
@@ -191,6 +199,9 @@ public class FrameChat extends JFrame
 
     class MyKeyListener implements KeyListener
     {
+        private static final int UP_ARROW = 38;
+        private static final int TAB = 9;
+
         @Override
         public void keyTyped(KeyEvent e)
         {
@@ -199,7 +210,16 @@ public class FrameChat extends JFrame
         @Override
         public void keyPressed(KeyEvent e)
         {
-            if (e.getKeyCode() == 38)
+            if (e.getKeyCode() == TAB)
+            {
+                tabPressed();
+            }
+            else
+            {
+                nameCompletionMode = false;
+            }
+
+            if (e.getKeyCode() == UP_ARROW)
             {
                 cycleMessageHistory();
             }
@@ -233,6 +253,108 @@ public class FrameChat extends JFrame
 
             BufferedImage icon = getIcon(getVisibleOnlineStatus(statusInfo));
             picLabel = new JLabel(new ImageIcon(icon));
+        }
+    }
+
+    private void cycleMessageHistory()
+    {
+        if (messageHistory.isEmpty())
+        {
+            return;
+        }
+
+        textField.setText(messageHistory.get(nextMessageHistoryIndex));
+        nextMessageHistoryIndex--;
+        if (nextMessageHistoryIndex < 0)
+        {
+            nextMessageHistoryIndex = messageHistory.size() - 1;
+        }
+    }
+
+    private void tabPressed()
+    {
+        if (!nameCompletionMode)
+        {
+            startTabCompletionProcess();
+        }
+
+        if (nameMatchList == null || nameMatchList.isEmpty())
+        {
+            return;
+        }
+
+        String newName = nameMatchList.get(nameListIndex);
+        String newLine = preName + newName + postName;
+        nameListIndex++;
+        if (nameListIndex >= nameMatchList.size())
+        {
+            nameListIndex = 0;
+        }
+
+        textField.setText(newLine);
+        textField.setCaretPosition(preName.length() + newName.length());
+    }
+
+    private void startTabCompletionProcess()
+    {
+        //reset the fields list
+        nameMatchList = null;
+
+        //get the current text field entry and ignore it if it's blank
+        String line = textField.getText();
+        int caretIndex = textField.getCaretPosition();
+
+        //check for chars and after the cursor
+        boolean noCharBefore = caretIndex == 0 || line.charAt(caretIndex - 1) == ' ';
+        boolean noCharAfter = caretIndex == line.length() || line.charAt(caretIndex) == ' ';
+
+        // if there's nothing before or after the cursor, do nothing
+        if (noCharBefore && noCharAfter)
+        {
+            return;
+        }
+
+        /* Here we're going to get the active word by finding the start of the word, then the end of the word. */
+        int startIndex, endIndex, currentIndex;
+        currentIndex = caretIndex;
+
+        //while there is a non empty character before, move current index back through the line
+        while (!noCharBefore)
+        {
+            currentIndex--;
+            noCharBefore = currentIndex == 0 || line.charAt(currentIndex - 1) == ' ';
+        }
+
+        startIndex = currentIndex;
+        currentIndex = caretIndex;
+
+        // while there is a non empty character after, move current index forward through the line
+        while (!noCharAfter)
+        {
+            currentIndex++;
+            noCharAfter = currentIndex == line.length() || line.charAt(currentIndex) == ' ';
+        }
+
+        endIndex = currentIndex;
+
+        incompleteName = line.substring(startIndex, endIndex);
+        preName = line.substring(0, startIndex);
+        postName = line.substring(endIndex);
+        nameCompletionMode = true;
+        createNameList();
+    }
+
+    private void createNameList()
+    {
+        nameMatchList = new LinkedList<>();
+
+        for (String playerName : onlinePlayers.keySet())
+        {
+            //check if the name starts with the incomplete name, and if it does, add it to the matching list
+            if (playerName.toLowerCase().startsWith(incompleteName))
+            {
+                nameMatchList.add(playerName);
+            }
         }
     }
 
@@ -704,21 +826,6 @@ public class FrameChat extends JFrame
         if (fromEnd < 10)
         {
             textPane.setCaretPosition(chatDoc.getLength());
-        }
-    }
-
-    private void cycleMessageHistory()
-    {
-        if (messageHistory.isEmpty())
-        {
-            return;
-        }
-
-        textField.setText(messageHistory.get(nextMessageHistoryIndex));
-        nextMessageHistoryIndex--;
-        if (nextMessageHistoryIndex < 0)
-        {
-            nextMessageHistoryIndex = messageHistory.size() - 1;
         }
     }
 

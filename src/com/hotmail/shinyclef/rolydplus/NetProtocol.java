@@ -27,10 +27,6 @@ public class NetProtocol
     public static final String QUIT_MESSAGE_TIMEOUT = QUIT_MESSAGE + ":Timeout";
     public static final String POISON_PILL_OUT = CUSTOM_COMMAND_MARKER + "PoisonPill";
 
-    private static final int SECOND_UNTIL_FIRST_RETRY = 20;
-    private static final int SECONDS_BETWEEN_RETRIES = 5;
-    private static final int MAX_RETRIES = 10;
-
     private static BlockingQueue<String> toServerQueue;
 
     public static void setToServerQueue()
@@ -165,7 +161,7 @@ public class NetProtocol
 
     public static void processTimeout()
     {
-        NetProtocol.processDisconnect("Connection timed out. Attempting to reconnect.", 10);
+        NetProtocol.processDisconnect("Disconnected (connection timed out).", -1);
     }
 
     /* Reconnect delay of -1 if you don't want to reconnect. */

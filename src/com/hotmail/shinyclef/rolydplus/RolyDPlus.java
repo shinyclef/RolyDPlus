@@ -14,8 +14,8 @@ import java.net.UnknownHostException;
 public class RolyDPlus
 {
     public static final boolean DEV_BUILD = false;
-    public static final boolean LOCAL_SERVER = true;
-    public static final String CLIENT_VERSION = "1.1.1";
+    public static final boolean LOCAL_SERVER = false;
+    public static final String CLIENT_VERSION = "1.1.2";
     private static int[] clientVersionParts;
     private static boolean isConnected = false;
     private static boolean hasLoggedIn = false;
@@ -23,8 +23,8 @@ public class RolyDPlus
     private static String SERVER_ADDRESS = "www.rolyd.com";
     private static int SERVER_PORT = 14890;
     private static Thread pinger;
-    private static final int TIMEOUT_SECONDS = 30;
-    public static final int PING_INTERVAL_SECONDS = 25;
+    private static final int TIMEOUT_SECONDS = 40;
+    public static final int PING_INTERVAL_SECONDS = 30;
 
     private static String username;
     private static String password;
